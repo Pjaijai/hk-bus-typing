@@ -46,6 +46,7 @@ export function HKMap({
   busLength = null,
   busShake = false,
   busSpeeding = 0,
+  busBoost = false,
   initialViewBox = null,
   className = "",
 }) {
@@ -140,6 +141,7 @@ export function HKMap({
           color={selectedRoute.color}
           shake={busShake}
           speeding={busSpeeding}
+          boost={busBoost}
         />
       ) : null}
     </svg>
@@ -148,7 +150,7 @@ export function HKMap({
 
 // A shaded top-down double-decker drawn pointing right and centred on the
 // origin; the roof takes the route colour like a KMB ad wrap.
-function BusMarker({ x, y, angle, scale, color, shake, speeding }) {
+function BusMarker({ x, y, angle, scale, color, shake, speeding, boost }) {
   return (
     <g
       className="hk-train"
@@ -156,9 +158,15 @@ function BusMarker({ x, y, angle, scale, color, shake, speeding }) {
         transform: `translate(${x}px, ${y}px) rotate(${angle}deg) scale(${scale})`,
       }}
     >
+      {/* A one-shot ring burst on every 10th streak — sits outside the
+          body group so its own radius animation doesn't fight the
+          shake/scale transforms. */}
+      {boost ? (
+        <circle className="hk-train-boost-ring" cx="0" cy="0" r="8" />
+      ) : null}
       {/* Shake lives on an inner group so it stacks with the position
           transform instead of fighting it. */}
-      <g className={`hk-train-body${shake ? " shake" : ""}`}>
+      <g className={`hk-train-body${shake ? " shake" : ""}${boost ? " boost" : ""}`}>
         {speeding ? (
           <g
             className={`bus-streaks${speeding >= 2 ? " max" : ""}`}

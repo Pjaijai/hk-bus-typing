@@ -4,8 +4,6 @@ import {
   ChevronLeft,
   ChevronUp,
   ExternalLink,
-  Github,
-  Play,
 } from "lucide-react";
 import { HKMap } from "./HKMap";
 import { SearchBox } from "./SearchBox";
@@ -152,15 +150,6 @@ export function HomeScreen({
               <span className="island-links">
                 <a
                   className="mtr-link"
-                  href="https://github.com/Pjaijai/hk-bus-typing"
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="GitHub"
-                >
-                  <Github size={14} aria-hidden="true" />
-                </a>
-                <a
-                  className="mtr-link"
                   href="https://mtr-typing.paulwong.dev/"
                   target="_blank"
                   rel="noreferrer"
@@ -253,7 +242,6 @@ export function HomeScreen({
                 style={{ "--line-color": selectedRoute.color }}
                 onClick={onStart}
               >
-                <Play size={15} />
                 {t("start")}
               </button>
             </div>
@@ -291,6 +279,13 @@ export function HomeScreen({
                     onClick={() => onModeChange("line")}
                   >
                     {t("modeLine")}
+                  </button>
+                  <button
+                    type="button"
+                    className={`option-button${mode === "express" ? " active" : ""}`}
+                    onClick={() => onModeChange("express")}
+                  >
+                    {t("modeExpress")}
                   </button>
                 </div>
               </div>

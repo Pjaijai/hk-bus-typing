@@ -22,6 +22,8 @@ export function GameScreen({
   runLabel,
   busLength,
   speedKmh,
+  streak,
+  busBoost,
   stations,
   mode,
   stationIndex,
@@ -69,6 +71,7 @@ export function GameScreen({
   );
   const targetCharacters = [...target];
   const [collapsed, setCollapsed] = useState(false);
+  const streakTier = streak >= 50 ? 3 : streak >= 25 ? 2 : streak >= 10 ? 1 : 0;
 
   return (
     /* The click handler only refocuses the hidden IME input for phones. */
@@ -90,6 +93,7 @@ export function GameScreen({
           busLength={busLength}
           busShake={shake}
           busSpeeding={speedKmh > 150 ? 2 : speedKmh > 100 ? 1 : 0}
+          busBoost={busBoost}
         />
       </div>
       <div className="game-top">
@@ -109,6 +113,17 @@ export function GameScreen({
           <strong>{runLabel}</strong>
         </div>
         <div className="game-top-right">
+          {streak > 0 ? (
+            <div
+              className={`game-timer game-streak${
+                streakTier ? ` streak-tier-${streakTier}` : ""
+              }`}
+              role="status"
+            >
+              <small>{t("streak")}</small>
+              <strong>{streak}</strong>
+            </div>
+          ) : null}
           <div
             className={`game-timer game-speed${speedKmh > 100 ? " overspeed" : ""}${
               speedKmh > 150 ? " overspeed-max" : ""

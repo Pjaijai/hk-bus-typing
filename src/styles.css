@@ -320,6 +320,30 @@ footer a {
   animation-duration: 0.15s;
 }
 
+/* Streak chip escalates the same way the speedo does — reuses the
+   overspeed keyframes, just new colors/thresholds. */
+.game-streak.streak-tier-1 strong {
+  color: #ffb020;
+}
+
+.game-streak.streak-tier-2 strong {
+  color: #ff8a3c;
+}
+
+.game-streak.streak-tier-2 {
+  animation: overspeed-pulse 0.7s ease-in-out infinite;
+}
+
+.game-streak.streak-tier-3 strong {
+  color: #ff2d1a;
+}
+
+.game-streak.streak-tier-3 {
+  animation:
+    overspeed-pulse 0.35s ease-in-out infinite,
+    overspeed-tremble 0.12s linear infinite;
+}
+
 /* The overview mesh stays translucent so overlapping corridors read as
    layers instead of a solid blob; hovering (via the fat hit path) lifts
    one route out of it. */
@@ -374,6 +398,36 @@ footer a {
   }
 }
 
+/* Every 10th streak: the bus pops and a gold ring bursts outward from it. */
+.hk-train-body.boost {
+  animation: train-boost-pop 0.5s ease-out;
+}
+
+@keyframes train-boost-pop {
+  30% {
+    transform: scale(1.35);
+  }
+}
+
+.hk-train-boost-ring {
+  fill: none;
+  stroke: #ffd23c;
+  animation: train-boost-ring 0.5s ease-out;
+}
+
+@keyframes train-boost-ring {
+  0% {
+    r: 8;
+    stroke-width: 2.2;
+    opacity: 0.9;
+  }
+  100% {
+    r: 22;
+    stroke-width: 0.3;
+    opacity: 0;
+  }
+}
+
 /* ---------- landing ---------- */
 
 .landing {
@@ -413,7 +467,7 @@ footer a {
 .island {
   position: absolute;
   left: 50%;
-  bottom: max(20px, env(safe-area-inset-bottom));
+  bottom: max(40px, calc(env(safe-area-inset-bottom) + 20px));
   transform: translateX(-50%);
   z-index: 10;
   width: min(880px, calc(100% - 28px));
@@ -708,8 +762,10 @@ footer a {
 }
 
 .start-button:disabled {
-  opacity: 0.45;
+  background: var(--line);
+  color: var(--ink-soft);
   cursor: not-allowed;
+  box-shadow: none;
   filter: none;
 }
 
@@ -1032,7 +1088,7 @@ footer a {
 
 .result-stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 18px;
   width: 100%;
   text-align: center;
@@ -1063,6 +1119,133 @@ footer a {
   font-size: 15px;
 }
 
+/* ---------- challenge (VS link landing + result panels) ---------- */
+
+.challenge {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.challenge-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  border-top: 5px solid var(--line-color, var(--accent));
+  box-shadow: var(--shadow);
+  padding: 34px 38px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+}
+
+.challenge-card svg {
+  color: var(--line-color, var(--accent));
+}
+
+.challenge-card h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.challenge-error {
+  gap: 10px;
+}
+
+.challenge-intro {
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.challenge-route {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.challenge-cta {
+  font-weight: 700;
+  margin: 0;
+}
+
+.challenge-name-input {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.versus-panel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+}
+
+.versus-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--ink-soft);
+}
+
+.versus-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  width: 100%;
+  text-align: center;
+}
+
+.versus-column {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.versus-column small {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+}
+
+.versus-column span {
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.versus-winner {
+  font-weight: 700;
+  margin: 0;
+}
+
+.share-panel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+}
+
+.share-feedback {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
 /* ---------- responsive ---------- */
 
 /* Keyboard shortcut hints mean nothing on touch screens. */
@@ -1075,7 +1258,7 @@ footer a {
 @media (max-width: 640px) {
   .island {
     width: calc(100% - 16px);
-    bottom: max(10px, env(safe-area-inset-bottom));
+    bottom: max(48px, calc(env(safe-area-inset-bottom) + 38px));
     padding: 13px 14px;
     border-radius: 18px;
   }
@@ -1090,8 +1273,6 @@ footer a {
   }
 
   .landing-credits {
-    top: max(64px, calc(env(safe-area-inset-top) + 58px));
-    bottom: auto;
     right: 10px;
     font-size: 10px;
   }
