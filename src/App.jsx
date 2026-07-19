@@ -750,6 +750,9 @@ export default function App() {
             errors={errors}
             bestStreak={bestStreak}
             lineColor={selectedRoute?.color}
+            routeCode={selectedRoute?.code}
+            routeCo={selectedRoute?.co}
+            runLabel={runLabel}
             onRetry={startGame}
             onBack={backToHome}
             opponent={challenge}

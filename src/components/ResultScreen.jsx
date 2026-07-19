@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { BusFront } from "lucide-react";
+import { routeTextColor } from "../lib/busNormalize";
 
 export function ResultScreen({
   t,
@@ -11,6 +12,9 @@ export function ResultScreen({
   errors,
   bestStreak,
   lineColor,
+  routeCode,
+  routeCo,
+  runLabel,
   onRetry,
   onBack,
   opponent,
@@ -20,6 +24,13 @@ export function ResultScreen({
   winner,
 }) {
   const [shareState, setShareState] = useState("idle");
+
+  const modeLabel =
+    mode === "express"
+      ? t("modeExpress")
+      : mode === "line"
+        ? t("modeLine")
+        : t("modeTimed");
 
   // Full route → terminus; a mistake in Express mode → back to driving
   // school; a full route in Express mode → zero-accident bragging rights;
@@ -49,6 +60,18 @@ export function ResultScreen({
       <div className="result-card">
         <BusFront size={34} aria-hidden="true" />
         <h1>{title}</h1>
+        {routeCode ? (
+          <div className="result-route">
+            <span
+              className="line-chip"
+              style={{ background: lineColor ?? "#E60012", color: routeTextColor(routeCo) }}
+            >
+              {routeCode}
+            </span>
+            {runLabel ? <strong>{runLabel}</strong> : null}
+            <span className="result-mode-label">{modeLabel}</span>
+          </div>
+        ) : null}
         <div className="result-stats">
           <div>
             <small>{metrics.speedUnit}</small>
