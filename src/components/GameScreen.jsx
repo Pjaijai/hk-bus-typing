@@ -89,6 +89,7 @@ export function GameScreen({
           completedCount={stationIndex}
           busLength={busLength}
           busShake={shake}
+          busSpeeding={speedKmh > 120}
         />
       </div>
       <div className="game-top">
@@ -108,7 +109,10 @@ export function GameScreen({
           <strong>{runLabel}</strong>
         </div>
         <div className="game-top-right">
-          <div className="game-timer game-speed" role="status">
+          <div
+            className={`game-timer game-speed${speedKmh > 120 ? " overspeed" : ""}`}
+            role="status"
+          >
             <small>km/h</small>
             <strong>{Math.round(speedKmh)}</strong>
           </div>

@@ -293,7 +293,11 @@ export default function App() {
       150,
       Math.max(0, (last.m - first.m) / 1000 / (span / 3600000)),
     );
-    setSpeedKmh((value) => value + (target - value) * 0.12);
+    // Asymmetric needle: earns speed slowly, loses it fast.
+    setSpeedKmh((value) => {
+      const rate = target > value ? 0.055 : 0.3;
+      return value + (target - value) * rate;
+    });
   }, [elapsedMs, screen]);
 
   const advanceStation = useCallback(() => {

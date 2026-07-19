@@ -45,6 +45,7 @@ export function HKMap({
   completedCount = 0,
   busLength = null,
   busShake = false,
+  busSpeeding = false,
   initialViewBox = null,
   className = "",
 }) {
@@ -138,6 +139,7 @@ export function HKMap({
           scale={(width / 700) * 3}
           color={selectedRoute.color}
           shake={busShake}
+          speeding={busSpeeding}
         />
       ) : null}
     </svg>
@@ -146,7 +148,7 @@ export function HKMap({
 
 // A shaded top-down double-decker drawn pointing right and centred on the
 // origin; the roof takes the route colour like a KMB ad wrap.
-function BusMarker({ x, y, angle, scale, color, shake }) {
+function BusMarker({ x, y, angle, scale, color, shake, speeding }) {
   return (
     <g
       className="hk-train"
@@ -157,6 +159,13 @@ function BusMarker({ x, y, angle, scale, color, shake }) {
       {/* Shake lives on an inner group so it stacks with the position
           transform instead of fighting it. */}
       <g className={`hk-train-body${shake ? " shake" : ""}`}>
+        {speeding ? (
+          <g className="bus-streaks" stroke="rgba(255,255,255,0.8)" strokeWidth="1.1">
+            <line x1="-13.5" y1="-3.2" x2="-22" y2="-3.2" />
+            <line x1="-14.5" y1="0" x2="-26" y2="0" />
+            <line x1="-13.5" y1="3.2" x2="-22" y2="3.2" />
+          </g>
+        ) : null}
         <defs>
           <linearGradient
             id="bus-body"
