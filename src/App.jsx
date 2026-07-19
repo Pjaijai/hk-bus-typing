@@ -496,7 +496,7 @@ export default function App() {
             t={t}
             locale={locale}
             mapModel={mapModel}
-            routes={data.routes}
+            routes={routes}
             selectedRoute={selectedRoute}
             runIndex={runIndex}
             onRunChange={selectRun}

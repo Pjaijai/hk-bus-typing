@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronDown, ChevronLeft, ChevronUp, Play } from "lucide-react";
 import { HKMap } from "./HKMap";
+import { SearchBox } from "./SearchBox";
 import { getRouteViewBox, MAP_VIEWBOX } from "../lib/map";
 import { getLineRuns, getPlayableStations, getRunLabel } from "../lib/data";
 import { OPERATOR_NAMES, OPERATORS, routeTextColor } from "../lib/busNormalize";
@@ -40,6 +41,10 @@ export function HomeScreen({
 
   const operatorName = (operator) =>
     useZh ? OPERATOR_NAMES[operator]?.zh : OPERATOR_NAMES[operator]?.en;
+  const loadedRouteIds = useMemo(
+    () => new Set(routes.map((route) => route.id)),
+    [routes],
+  );
 
   const typingLanguageGroup = (
     <div className="island-group">
@@ -122,6 +127,13 @@ export function HomeScreen({
               <h1>{t("appName")}</h1>
               <p>{t("tagline")}</p>
             </div>
+            <SearchBox
+              t={t}
+              locale={locale}
+              loadedRouteIds={loadedRouteIds}
+              onPick={onSelect}
+              onRouteLoaded={onRouteLoaded}
+            />
             {OPERATORS.map((operator) => {
               const operatorRoutes = routes.filter(
                 (route) => route.operator === operator,
