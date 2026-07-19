@@ -52,13 +52,13 @@ export function GameScreen({
       activeRun && busLength != null
         ? pointAtLength(activeRun.geometry, activeRun.lengths, busLength).point
         : null;
+    // Chase cam: a fixed tight window centred on the bus alone — the
+    // target stop simply rolls into view as the bus closes in on it.
     const points = [
-      busPoint,
-      activeRun?.stops[stationIndex]?.point ??
-        activeRun?.stops[stationIndex - 1]?.point,
+      busPoint ?? activeRun?.stops[stationIndex]?.point,
     ].filter(Boolean);
     return points.length
-      ? getPairViewBox(points, 42, 20, 0.16)
+      ? getPairViewBox(points, 28, 12, 0.16)
       : getRouteViewBox(route, 320, 64, 0.16);
   }, [activeRun, busLength, route, stationIndex]);
   // Pressing start flies the camera in from the whole route to the first
