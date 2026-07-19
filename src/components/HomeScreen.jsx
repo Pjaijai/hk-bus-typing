@@ -4,7 +4,6 @@ import {
   ChevronLeft,
   ChevronUp,
   ExternalLink,
-  Github,
 } from "lucide-react";
 import { HKMap } from "./HKMap";
 import { SearchBox } from "./SearchBox";
@@ -149,15 +148,6 @@ export function HomeScreen({
               <h1>{t("appName")}</h1>
               <p>{t("tagline")}</p>
               <span className="island-links">
-                <a
-                  className="mtr-link"
-                  href="https://github.com/Pjaijai/hk-bus-typing"
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label="GitHub"
-                >
-                  <Github size={14} aria-hidden="true" />
-                </a>
                 <a
                   className="mtr-link"
                   href="https://mtr-typing.paulwong.dev/"
