@@ -256,7 +256,7 @@ footer a {
   transition: opacity 0.25s ease;
 }
 
-/* Over 120 km/h: the speedo runs hot and the bus trails speed streaks. */
+/* Over 100 km/h: the speedo runs hot and the bus trails speed streaks. */
 .game-speed.overspeed strong {
   color: #ff5a3c;
 }
