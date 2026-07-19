@@ -121,7 +121,7 @@ export function GameScreen({
               role="status"
             >
               <small>{t("streak")}</small>
-              <strong>{streakTier ? `×${streakTier + 1}` : streak}</strong>
+              <strong>{streak}</strong>
             </div>
           ) : null}
           <div
