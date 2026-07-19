@@ -580,6 +580,14 @@ export default function App() {
               </a>
               <span className="footer-sep">·</span>
               <a
+                href="https://github.com/hkbus/route-waypoints"
+                target="_blank"
+                rel="noreferrer"
+              >
+                {t("waypointsCredit")}
+              </a>
+              <span className="footer-sep">·</span>
+              <a
                 href="https://www.openstreetmap.org/copyright"
                 target="_blank"
                 rel="noreferrer"

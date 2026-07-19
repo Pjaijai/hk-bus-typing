@@ -104,6 +104,14 @@ export function HomeScreen({
         </a>
         {" · "}
         <a
+          href="https://github.com/hkbus/route-waypoints"
+          target="_blank"
+          rel="noreferrer"
+        >
+          {t("waypointsCredit")}
+        </a>
+        {" · "}
+        <a
           href="https://www.openstreetmap.org/copyright"
           target="_blank"
           rel="noreferrer"
