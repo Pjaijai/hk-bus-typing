@@ -1,5 +1,11 @@
 import { useMemo, useState } from "react";
-import { ChevronDown, ChevronLeft, ChevronUp, Play } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronUp,
+  ExternalLink,
+  Play,
+} from "lucide-react";
 import { HKMap } from "./HKMap";
 import { SearchBox } from "./SearchBox";
 import { getRouteViewBox, MAP_VIEWBOX } from "../lib/map";
@@ -134,6 +140,18 @@ export function HomeScreen({
             <div className="island-title">
               <h1>{t("appName")}</h1>
               <p>{t("tagline")}</p>
+              <a
+                className="mtr-link"
+                href="https://mtr-typing.paulwong.dev/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <span className="line-chip" style={{ background: "#E60012" }}>
+                  MTR
+                </span>
+                {t("mtrGame")}
+                <ExternalLink size={12} aria-hidden="true" />
+              </a>
             </div>
             <SearchBox
               t={t}
