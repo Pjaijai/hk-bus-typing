@@ -21,17 +21,20 @@ export function ResultScreen({
 }) {
   const [shareState, setShareState] = useState("idle");
 
-  // Full route → terminus; a mistake in Express mode → breakdown; some
-  // progress → a pat on the back; never left the first stop → questions
-  // about the driver's licence.
+  // Full route → terminus; a mistake in Express mode → back to driving
+  // school; a full route in Express mode → zero-accident bragging rights;
+  // some progress → a pat on the back; never left the first stop →
+  // questions about the driver's licence.
   const title =
     mode === "express" && totalStops && completed < totalStops
       ? t("resultTitleExpressDeath")
-      : totalStops && completed >= totalStops
-        ? t("resultTitle")
-        : completed > 0
-          ? t("resultTitleProgress")
-          : t("resultTitleZero");
+      : mode === "express" && totalStops && completed >= totalStops
+        ? t("resultTitleExpressSuccess")
+        : totalStops && completed >= totalStops
+          ? t("resultTitle")
+          : completed > 0
+            ? t("resultTitleProgress")
+            : t("resultTitleZero");
 
   const copyLink = () => {
     const url = onShare();
