@@ -9,7 +9,7 @@ import {
 import { HKMap } from "./HKMap";
 import { getPairViewBox, getRouteViewBox } from "../lib/map";
 import { pointAtLength } from "../lib/busGeometry";
-import { routeTextColor } from "../lib/busNormalize";
+import { contrastText } from "../lib/busNormalize";
 import { TYPING_LANGUAGES } from "../lib/typing";
 import { UI_LOCALES } from "../lib/i18n";
 
@@ -107,7 +107,7 @@ export function GameScreen({
           <span className="back-label">{t("backToRoutes")}</span>
         </button>
         <div className="game-line">
-          <span className="line-chip" style={{ background: line.color, color: routeTextColor(line.co) }}>
+          <span className="line-chip" style={{ background: line.color, color: contrastText(line.color) }}>
             {line.code}
           </span>
           <strong>{runLabel}</strong>

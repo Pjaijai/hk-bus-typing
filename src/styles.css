@@ -534,42 +534,41 @@ footer a {
   gap: 8px;
 }
 
-/* GitHub + crossover link to the sibling MTR typing game. */
 .island-title {
   position: relative;
 }
 
-.island-links {
-  position: absolute;
-  top: 0;
-  right: 0;
+/* Transport-type switch: one chip per operator, wrapping onto new rows so
+   every type stays visible without a sideways scroll. */
+.type-switch {
   display: flex;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
-.mtr-link {
+.type-button {
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 9px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
+  gap: 5px;
+  padding: 6px 11px;
+  border-radius: 999px;
   background: var(--surface);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--ink-soft);
-  text-decoration: none;
+  border: 1px solid var(--line);
+  font-size: 12.5px;
+  font-weight: 650;
+  white-space: nowrap;
 }
 
-.mtr-link:hover {
-  color: var(--ink);
-  border-color: #e60012;
+.type-button svg {
+  flex: 0 0 auto;
 }
 
-.mtr-link .line-chip {
-  min-width: auto;
-  padding: 2px 6px;
-  font-size: 10.5px;
+.type-button.active {
+  color: var(--line-color);
+  border-color: var(--line-color);
+  box-shadow: inset 0 0 0 1px var(--line-color);
 }
 
 .line-pill {
@@ -594,6 +593,19 @@ footer a {
    termini live in the tooltip and in the selection panel. */
 .route-pill {
   padding: 4px;
+}
+
+/* MTR lines are named, not numbered — each option carries the line-code chip
+   in its livery colour plus the full line name, riding the same two-row
+   sideways-scrolling strip as the route pills. */
+.route-pill.named-pill {
+  padding: 5px 12px 5px 5px;
+}
+
+.line-pill-name {
+  font-size: 12.5px;
+  font-weight: 650;
+  white-space: nowrap;
 }
 
 .operator-group {
@@ -708,6 +720,9 @@ footer a {
 }
 
 .island-head .line-names small {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   color: var(--ink-soft);
   font-size: 12px;
 }

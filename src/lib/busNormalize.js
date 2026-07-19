@@ -10,19 +10,70 @@ import {
   simplifyLine,
 } from "./busGeometry.js";
 
-export const OPERATORS = ["kmb", "ctb", "nlb"];
+// kmb/ctb/nlb stay first so joint ctb+kmb routes resolve to KMB as primary.
+export const OPERATORS = [
+  "kmb",
+  "ctb",
+  "nlb",
+  "gmb",
+  "lrtfeeder",
+  "lightRail",
+  "mtr",
+  "sunferry",
+  "fortuneferry",
+  "hkkf",
+];
 
 export const OPERATOR_COLORS = {
   kmb: "#D71920",
   ctb: "#FDB913",
   nlb: "#00934B",
+  gmb: "#37B34A",
+  lrtfeeder: "#178F7D",
+  lightRail: "#7B4FA0",
+  mtr: "#E2231A",
+  sunferry: "#0075C2",
+  fortuneferry: "#F08300",
+  hkkf: "#0AA3B5",
 };
 
 export const OPERATOR_NAMES = {
   kmb: { en: "KMB", zh: "九巴" },
   ctb: { en: "Citybus", zh: "城巴" },
   nlb: { en: "NLB", zh: "嶼巴" },
+  gmb: { en: "Minibus", zh: "專線小巴" },
+  lrtfeeder: { en: "MTR Bus", zh: "港鐵巴士" },
+  lightRail: { en: "Light Rail", zh: "輕鐵" },
+  mtr: { en: "MTR", zh: "港鐵" },
+  sunferry: { en: "Sun Ferry", zh: "新渡輪" },
+  fortuneferry: { en: "Fortune Ferry", zh: "富裕小輪" },
+  hkkf: { en: "HKKF", zh: "港九小輪" },
 };
+
+// MTR heavy-rail routes carry a line code (AEL, TWL, …) as their "route".
+// Riders know these by name and livery colour, so we surface the full line
+// name in place of the code and paint each option in its own official hue
+// rather than the generic MTR red.
+export const MTR_LINES = {
+  AEL: { en: "Airport Express", zh: "機場快綫", color: "#00888E" },
+  TCL: { en: "Tung Chung Line", zh: "東涌綫", color: "#F7943E" },
+  TML: { en: "Tuen Ma Line", zh: "屯馬綫", color: "#923011" },
+  TKL: { en: "Tseung Kwan O Line", zh: "將軍澳綫", color: "#7D499D" },
+  EAL: { en: "East Rail Line", zh: "東鐵綫", color: "#53B7E8" },
+  SIL: { en: "South Island Line", zh: "南港島綫", color: "#BAC429" },
+  TWL: { en: "Tsuen Wan Line", zh: "荃灣綫", color: "#E2231A" },
+  KTL: { en: "Kwun Tong Line", zh: "觀塘綫", color: "#00AB4E" },
+  ISL: { en: "Island Line", zh: "港島綫", color: "#007DC5" },
+  DRL: { en: "Disneyland Resort Line", zh: "迪士尼綫", color: "#E45FA9" },
+};
+
+// Full MTR line name in the active locale, or null when `route` isn't a known
+// MTR line code — callers then fall back to the raw route number.
+export function mtrLineName(co, route, useZh) {
+  if (primaryOperator(co) !== "mtr") return null;
+  const line = MTR_LINES[route];
+  return line ? (useZh ? line.zh : line.en) : null;
+}
 
 // ~11 m at Hong Kong's latitude; waypoints ship 5-decimal coordinates.
 const SIMPLIFY_TOLERANCE_DEG = 1e-4;
@@ -50,6 +101,10 @@ function shiftShade(hex, amount) {
 }
 
 export function routeColor(co, route = "") {
+  // Each MTR line has its own livery; skip the per-route shade shift so a
+  // line reads in exactly its official colour.
+  if (primaryOperator(co) === "mtr" && MTR_LINES[route])
+    return MTR_LINES[route].color;
   const base = OPERATOR_COLORS[primaryOperator(co)] ?? "#888888";
   if (!route) return base;
   let hash = 0;
@@ -58,13 +113,27 @@ export function routeColor(co, route = "") {
   return shiftShade(base, ((hash % 15) - 7) * 0.02);
 }
 
-// Citybus yellow needs dark text; the other operator colours carry white.
-export function routeTextColor(co) {
-  return primaryOperator(co) === "ctb" ? "#20242a" : "#ffffff";
+// Dark or white text for a chip painted `hex`, by perceived lightness — the
+// MTR liveries span lime and light blue, so a fixed white no longer works.
+export function contrastText(hex) {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6 ? "#20242a" : "#ffffff";
 }
 
 function serviceKey(serviceType) {
   return String(serviceType);
+}
+
+// MTR carries "DT"/"UT" (down/up track) plus branch variants like "LMC-DT";
+// map those onto the outbound/inbound slots the pairing logic expects. Bus
+// "O"/"I" pass through, and combined "OI"/"IO" fall through to be handled as a
+// single run downstream.
+function normalizeBound(raw) {
+  if (raw === "O" || raw === "I") return raw;
+  if (typeof raw === "string" && raw.endsWith("UT")) return "I";
+  if (typeof raw === "string" && raw.endsWith("DT")) return "O";
+  return raw;
 }
 
 function looksReversed(a, b) {
@@ -123,7 +192,7 @@ export function pairBounds(entries) {
         combined: [],
       });
     const group = groups.get(groupKey);
-    const bound = entry.bound?.[operator] ?? "O";
+    const bound = normalizeBound(entry.bound?.[operator] ?? "O");
     if (bound === "O" || bound === "I") {
       if (!group.entries[bound]) group.entries[bound] = { key, entry };
       // NLB marks both directions "O"; the swapped-termini twin is inbound.

@@ -1,17 +1,27 @@
-import { useMemo, useState } from "react";
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronUp,
-  ExternalLink,
-} from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { ChevronDown, ChevronLeft, ChevronUp } from "lucide-react";
 import { HKMap } from "./HKMap";
 import { SearchBox } from "./SearchBox";
 import { getRouteViewBox, MAP_VIEWBOX } from "../lib/map";
 import { getLineRuns, getPlayableStations, getRunLabel } from "../lib/data";
-import { OPERATOR_NAMES, OPERATORS, routeTextColor } from "../lib/busNormalize";
+import { loadPlayableRoute, loadRouteIndex } from "../lib/routeLoader";
+import {
+  contrastText,
+  mtrLineName,
+  OPERATOR_COLORS,
+  OPERATOR_NAMES,
+  OPERATORS,
+  primaryOperator,
+  routeColor,
+} from "../lib/busNormalize";
+import { OperatorIcon } from "../lib/operatorIcons";
 import { TYPING_LANGUAGES } from "../lib/typing";
 import { UI_LOCALES } from "../lib/i18n";
+
+// Operators that ship a curated offline set (featured-routes.json is bus-only).
+const FEATURED_OPERATORS = ["kmb", "ctb", "nlb"];
+// How many index routes to surface per non-featured type on the landing page.
+const TYPE_ROUTE_LIMIT = 24;
 
 export function HomeScreen({
   t,
@@ -49,6 +59,85 @@ export function HomeScreen({
   const loadedRouteIds = useMemo(
     () => new Set(routes.map((route) => route.id)),
     [routes],
+  );
+
+  // The offline featured set is bus-only; those operators show their curated
+  // routes instantly. Every other type is browsed from the search index and
+  // loaded on demand, the same path SearchBox uses.
+  const [selectedType, setSelectedType] = useState(OPERATORS[0]);
+  const [typeIndex, setTypeIndex] = useState(null);
+  const [typeIndexFailed, setTypeIndexFailed] = useState(false);
+  const [loadingId, setLoadingId] = useState(null);
+  const [failedId, setFailedId] = useState(null);
+
+  const ensureTypeIndex = useCallback(() => {
+    if (typeIndex) return;
+    setTypeIndexFailed(false);
+    loadRouteIndex()
+      .then(setTypeIndex)
+      .catch(() => setTypeIndexFailed(true));
+  }, [typeIndex]);
+
+  const chooseType = useCallback(
+    (operator) => {
+      setSelectedType(operator);
+      setFailedId(null);
+      if (!FEATURED_OPERATORS.includes(operator)) ensureTypeIndex();
+    },
+    [ensureTypeIndex],
+  );
+
+  // Chips for the selected type: featured operators come straight from the
+  // loaded route objects; other types come from the index (capped), carrying
+  // the raw entry so a click can load it. null means "index not ready yet".
+  const typeRoutes = useMemo(() => {
+    if (FEATURED_OPERATORS.includes(selectedType))
+      return routes
+        .filter((route) => route.operator === selectedType)
+        .map((route) => ({
+          id: route.id,
+          route: route.route,
+          co: route.co,
+          color: route.color,
+          title: getRunLabel(getLineRuns(route)[0], useZh),
+          loaded: true,
+        }));
+    if (!typeIndex) return null;
+    return typeIndex
+      .filter((entry) => primaryOperator(entry.co) === selectedType)
+      .slice(0, TYPE_ROUTE_LIMIT)
+      .map((entry) => ({
+        id: entry.id,
+        route: entry.route,
+        co: entry.co,
+        color: routeColor(entry.co, entry.route),
+        title: useZh
+          ? `${entry.orig.zh} → ${entry.dest.zh}`
+          : `${entry.orig.en} → ${entry.dest.en}`,
+        loaded: loadedRouteIds.has(entry.id),
+        entry,
+      }));
+  }, [selectedType, routes, typeIndex, loadedRouteIds, useZh]);
+
+  const pickTypeRoute = useCallback(
+    (item) => {
+      if (item.loaded) {
+        onSelect(item.id);
+        return;
+      }
+      setFailedId(null);
+      setLoadingId(item.id);
+      loadPlayableRoute(item.entry)
+        .then((route) => {
+          setLoadingId(null);
+          onRouteLoaded(route);
+        })
+        .catch(() => {
+          setLoadingId(null);
+          setFailedId(item.id);
+        });
+    },
+    [onSelect, onRouteLoaded],
   );
 
   const typingLanguageGroup = (
@@ -147,20 +236,6 @@ export function HomeScreen({
             <div className="island-title">
               <h1>{t("appName")}</h1>
               <p>{t("tagline")}</p>
-              <span className="island-links">
-                <a
-                  className="mtr-link"
-                  href="https://mtr-typing.paulwong.dev/"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <span className="line-chip" style={{ background: "#E60012" }}>
-                    MTR
-                  </span>
-                  {t("mtrGame")}
-                  <ExternalLink size={12} aria-hidden="true" />
-                </a>
-              </span>
             </div>
             <SearchBox
               t={t}
@@ -169,41 +244,80 @@ export function HomeScreen({
               onPick={onSelect}
               onRouteLoaded={onRouteLoaded}
             />
-            {OPERATORS.map((operator) => {
-              const operatorRoutes = routes.filter(
-                (route) => route.operator === operator,
-              );
-              if (!operatorRoutes.length) return null;
-              return (
-                <div key={operator} className="operator-group">
-                  <span
-                    className="island-label operator-label"
-                    style={{ "--line-color": operatorRoutes[0].color }}
+            <div className="operator-group">
+              <span className="island-label">{t("transportType")}</span>
+              <div className="type-switch">
+                {OPERATORS.map((operator) => (
+                  <button
+                    key={operator}
+                    type="button"
+                    className={`type-button${
+                      selectedType === operator ? " active" : ""
+                    }`}
+                    style={{ "--line-color": OPERATOR_COLORS[operator] }}
+                    onClick={() => chooseType(operator)}
                   >
+                    <OperatorIcon
+                      operator={operator}
+                      size={15}
+                      aria-hidden="true"
+                    />
                     {operatorName(operator)}
-                  </span>
-                  <div className="line-strip">
-                    {operatorRoutes.map((route) => (
+                  </button>
+                ))}
+              </div>
+              {typeIndexFailed && !typeRoutes ? (
+                <p className="search-status">
+                  {t("searchError")}{" "}
+                  <button
+                    type="button"
+                    className="ghost-button"
+                    onClick={ensureTypeIndex}
+                  >
+                    {t("searchRetry")}
+                  </button>
+                </p>
+              ) : !typeRoutes ? (
+                <p className="search-status">{t("searchLoading")}</p>
+              ) : !typeRoutes.length ? (
+                <p className="search-status">{t("searchNoResults")}</p>
+              ) : (
+                <div className="line-strip">
+                  {typeRoutes.map((item) => {
+                    const lineName = mtrLineName(item.co, item.route, useZh);
+                    return (
                       <button
-                        key={route.id}
+                        key={item.id}
                         type="button"
-                        className="line-pill route-pill"
-                        style={{ "--line-color": route.color }}
-                        title={getRunLabel(getLineRuns(route)[0], useZh)}
-                        onClick={() => onSelect(route.id)}
+                        className={`line-pill route-pill${
+                          lineName ? " named-pill" : ""
+                        }`}
+                        style={{ "--line-color": item.color }}
+                        title={item.title}
+                        disabled={loadingId === item.id}
+                        onClick={() => pickTypeRoute(item)}
                       >
                         <span
                           className="line-chip"
-                          style={{ background: route.color, color: routeTextColor(route.co) }}
+                          style={{
+                            background: item.color,
+                            color: contrastText(item.color),
+                          }}
                         >
-                          {route.route}
+                          {item.route}
                         </span>
+                        {lineName ? (
+                          <span className="line-pill-name">{lineName}</span>
+                        ) : null}
                       </button>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              )}
+              {failedId ? (
+                <p className="search-status error">{t("searchError")}</p>
+              ) : null}
+            </div>
             <p className="start-hint island-hint">{t("homeHint")}</p>
           </>
         ) : (
@@ -219,7 +333,7 @@ export function HomeScreen({
               </button>
               <span
                 className="line-chip large"
-                style={{ background: selectedRoute.color, color: routeTextColor(selectedRoute.co) }}
+                style={{ background: selectedRoute.color, color: contrastText(selectedRoute.color) }}
               >
                 {selectedRoute.route}
               </span>
@@ -232,8 +346,14 @@ export function HomeScreen({
                     : selectedRoute.route}
                 </strong>
                 <small>
-                  {operatorName(selectedRoute.operator)} · {playable.length}{" "}
-                  {t("stops")}
+                  <OperatorIcon
+                    operator={selectedRoute.operator}
+                    size={13}
+                    aria-hidden="true"
+                  />
+                  {mtrLineName(selectedRoute.co, selectedRoute.route, useZh) ??
+                    operatorName(selectedRoute.operator)}{" "}
+                  · {playable.length} {t("stops")}
                 </small>
               </span>
               <button
