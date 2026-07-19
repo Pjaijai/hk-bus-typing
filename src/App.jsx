@@ -723,6 +723,7 @@ export default function App() {
             mode={mode}
             stationIndex={stationIndex}
             typedIndex={typedIndex}
+            legProgress={legProgress}
             target={currentTarget}
             typingLanguage={typingLanguage}
             compositionText={compositionText}

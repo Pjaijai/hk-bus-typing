@@ -28,6 +28,7 @@ export function GameScreen({
   mode,
   stationIndex,
   typedIndex,
+  legProgress,
   target,
   typingLanguage,
   compositionText,
@@ -70,6 +71,16 @@ export function GameScreen({
     [route],
   );
   const targetCharacters = [...target];
+  // Mobile in-game progress: a two-dot track from the stop just left behind
+  // to the stop being typed, with the bus crawling across it as characters
+  // land. Resets every stop. Labels read in the UI locale.
+  const stationLabel = (s) => (s ? (useZh ? s.nameZh : s.nameEn) : "");
+  const fromStation = stations[stationIndex - 1] ?? null;
+  const fromLabel = fromStation ? stationLabel(fromStation) : useZh ? "起點" : "Start";
+  const toLabel = stationLabel(station);
+  // legProgress (0–1) is the same value that drives the bus along the map,
+  // so the little track stays in lock-step with it — errors pull it back too.
+  const segPct = Math.round(Math.min(Math.max(legProgress ?? 0, 0), 1) * 100);
   const [collapsed, setCollapsed] = useState(false);
   const streakTier = streak >= 50 ? 3 : streak >= 25 ? 2 : streak >= 10 ? 1 : 0;
   // Desktop gate: only mount the driver on wide, fine-pointer screens. This
@@ -198,6 +209,28 @@ export function GameScreen({
         >
           {collapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
+        <div className="game-progress" aria-hidden="true">
+          <div className="game-progress-labels">
+            <span className="from">{fromLabel}</span>
+            <span className="to">{toLabel}</span>
+          </div>
+          <div className="game-progress-track">
+            <span className="game-progress-dot from" />
+            <div className="game-progress-line">
+              <div
+                className="game-progress-fill"
+                style={{ width: `${segPct}%` }}
+              />
+              <span
+                className="game-progress-bus"
+                style={{ left: `${segPct}%` }}
+              >
+                🚌
+              </span>
+            </div>
+            <span className="game-progress-dot to" />
+          </div>
+        </div>
         <div className="game-stats">
           <div>
             <small>{metrics.speedUnit}</small>
