@@ -508,7 +508,8 @@ footer a {
 }
 
 .island.collapsed.game-island .game-stats,
-.island.collapsed.game-island .station-names {
+.island.collapsed.game-island .station-names,
+.island.collapsed.game-island .game-progress {
   display: none;
 }
 
@@ -1132,6 +1133,91 @@ footer a {
   font-variant-numeric: tabular-nums;
 }
 
+/* Mobile-only in-game progress: two stops with the bus crawling between them
+   as the destination name is typed. Hidden on desktop, where the live map,
+   HUD and driver already carry the state. Switched on in the phone media
+   query below. */
+.game-progress {
+  display: none;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.game-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.game-progress-labels .from {
+  color: var(--ink-soft);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-progress-labels .to {
+  font-weight: 700;
+  color: var(--ink);
+  text-align: right;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-progress-track {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 18px;
+}
+
+.game-progress-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--line-color, var(--accent));
+  background: var(--surface);
+}
+
+.game-progress-dot.from {
+  background: var(--line-color, var(--accent));
+}
+
+.game-progress-line {
+  position: relative;
+  flex: 1;
+  height: 3px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--line) 70%, transparent);
+}
+
+.game-progress-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--line-color, var(--accent));
+  transition: width 0.12s ease-out;
+}
+
+/* Emoji bus faces left by default; flip it to point the way it travels. */
+.game-progress-bus {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%) scaleX(-1);
+  font-size: 15px;
+  line-height: 1;
+  pointer-events: none;
+  transition: left 0.12s ease-out;
+}
+
 /* ---------- result ---------- */
 
 .result {
@@ -1372,32 +1458,54 @@ footer a {
     font-size: 10px;
   }
 
-  /* Compact in-game layout: stats in one slim row, tighter typing block. */
-  .game-island .game-stats {
+  /* Minimal in-game layout: stack the HUD and the typing panel in normal
+     flow at the top so every chip wraps onto its own line instead of
+     overflowing, with the map filling the space below and the moving bus
+     staying in view. Both are position:relative so they paint above the
+     absolutely-positioned map. */
+  .game {
     display: flex;
-    justify-content: space-between;
-    gap: 8px;
-    padding-bottom: 10px;
+    flex-direction: column;
   }
 
-  .game-island .game-stats strong {
-    font-size: 15px;
+  .game-map-bg {
+    z-index: 0;
   }
 
-  .game-island .game-stats small {
-    font-size: 9.5px;
+  .game-top {
+    position: relative;
+    flex-wrap: wrap;
+    z-index: 20;
   }
 
-  .game-island .station-names h2 {
-    font-size: 22px;
+  .game-top-right {
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
-  .game-island .station-names small {
-    font-size: 10px;
+  .game-island {
+    position: relative;
+    top: auto;
+    bottom: auto;
+    transform: none;
+    left: auto;
+    align-self: center;
+    margin-top: 8px;
+    max-height: none;
+    z-index: 10;
+  }
+
+  .game-island .game-stats,
+  .game-island .station-names {
+    display: none;
+  }
+
+  .game-island .game-progress {
+    display: flex;
   }
 
   .game-island .typing-panel {
-    padding-top: 10px;
+    padding-top: 12px;
     gap: 6px;
   }
 
@@ -1451,13 +1559,21 @@ footer a {
     display: none;
   }
 
-  .game-line strong,
+  /* Timers keep their numbers on one line; the route label may wrap so a
+     long run name never pushes the row off-screen. */
   .game-timer {
     white-space: nowrap;
   }
 
+  .game-line {
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+
   .game-line strong {
     font-size: 13px;
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 }
 
