@@ -135,7 +135,7 @@ export function HKMap({
           x={bus.point[0]}
           y={bus.point[1]}
           angle={(bus.angle * 180) / Math.PI}
-          scale={width / 700}
+          scale={(width / 700) * 1.7}
           color={selectedRoute.color}
           shake={busShake}
         />
