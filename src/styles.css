@@ -9,6 +9,7 @@
   --land-stroke: #cfd6dd;
   --accent: #e60012;
   --shadow: 0 10px 30px rgba(20, 24, 33, 0.08);
+  --kb-inset: 0px;
   color-scheme: light;
 }
 
@@ -467,7 +468,7 @@ footer a {
 .island {
   position: absolute;
   left: 50%;
-  bottom: max(40px, calc(env(safe-area-inset-bottom) + 20px));
+  bottom: calc(max(40px, calc(env(safe-area-inset-bottom) + 20px)) + var(--kb-inset));
   transform: translateX(-50%);
   z-index: 10;
   width: min(880px, calc(100% - 28px));

@@ -39,6 +39,31 @@ const safeStorage = () =>
 
 const TIMED_MS = 30000;
 
+// iOS Safari doesn't shrink the layout viewport for the on-screen keyboard
+// (unlike Chrome/Android), so fixed/absolute bottom-anchored UI ends up
+// hidden behind it. Track the gap via visualViewport and expose it as a
+// CSS var so bottom-anchored panels can offset themselves above it.
+function useKeyboardInset() {
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    const update = () => {
+      const inset = Math.max(
+        0,
+        window.innerHeight - viewport.height - viewport.offsetTop,
+      );
+      document.documentElement.style.setProperty("--kb-inset", `${inset}px`);
+    };
+    update();
+    viewport.addEventListener("resize", update);
+    viewport.addEventListener("scroll", update);
+    return () => {
+      viewport.removeEventListener("resize", update);
+      viewport.removeEventListener("scroll", update);
+    };
+  }, []);
+}
+
 function useNetworkData() {
   const [state, setState] = useState({ data: null, boundary: null, error: null });
   useEffect(() => {
@@ -67,6 +92,7 @@ function useNetworkData() {
 }
 
 export default function App() {
+  useKeyboardInset();
   const { data, boundary, error } = useNetworkData();
   // Routes loaded through search-all join the featured set at runtime.
   const [extraRoutes, setExtraRoutes] = useState([]);
