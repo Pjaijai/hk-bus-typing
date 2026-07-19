@@ -1458,9 +1458,17 @@ footer a {
     font-size: 10px;
   }
 
-  /* Minimal in-game layout: drop the stats grid and station heading so the
-     phone shows just the text to type, with the two-dot bus progress above
-     it and the live map behind. */
+  /* Minimal in-game layout: drop the map, the stats grid and the station
+     heading so the phone shows just the text to type with the two-dot bus
+     progress above it, on a plain canvas. */
+  .game-map-bg {
+    display: none;
+  }
+
+  .game {
+    background: var(--bg);
+  }
+
   .game-island .game-stats,
   .game-island .station-names {
     display: none;
