@@ -58,7 +58,7 @@ export function GameScreen({
       busPoint ?? activeRun?.stops[stationIndex]?.point,
     ].filter(Boolean);
     return points.length
-      ? getPairViewBox(points, 28, 12, 0.16)
+      ? getPairViewBox(points, 12, 6, 0.16)
       : getRouteViewBox(route, 320, 64, 0.16);
   }, [activeRun, busLength, route, stationIndex]);
   // Pressing start flies the camera in from the whole route to the first
