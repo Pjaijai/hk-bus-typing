@@ -111,6 +111,11 @@ export default function App() {
   // Metres already banked at completed stops; the current leg's partial
   // distance is derived from typing progress each render.
   const traveledMetersRef = useRef(0);
+  // Rolling-window speedo: the km/h shown is your pace over the last few
+  // seconds, not a lifetime average — pause and it falls to zero.
+  const currentMetersRef = useRef(0);
+  const speedSamplesRef = useRef([]);
+  const [speedKmh, setSpeedKmh] = useState(0);
 
   const startTimeRef = useRef(0);
   const typingInputRef = useRef(null);
@@ -222,6 +227,9 @@ export default function App() {
     setElapsedMs(0);
     setStopPenalty(0);
     traveledMetersRef.current = 0;
+    currentMetersRef.current = 0;
+    speedSamplesRef.current = [];
+    setSpeedKmh(0);
     startTimeRef.current = performance.now();
     setScreen("game");
     typingInputRef.current?.focus({ preventScroll: true });
@@ -267,6 +275,21 @@ export default function App() {
     if (screen === "game" && mode === "timed" && elapsedMs >= TIMED_MS)
       finishGame();
   }, [elapsedMs, finishGame, mode, screen]);
+
+  // Sampled on every 200ms tick; speed = metres gained across a 5s window.
+  useEffect(() => {
+    if (screen !== "game") return;
+    const samples = speedSamplesRef.current;
+    samples.push({ ms: elapsedMs, m: currentMetersRef.current });
+    while (samples.length && samples[0].ms < elapsedMs - 5000) samples.shift();
+    const first = samples[0];
+    const last = samples[samples.length - 1];
+    const span = last.ms - first.ms;
+    if (span >= 500)
+      setSpeedKmh(
+        Math.max(0, Math.round((last.m - first.m) / 1000 / (span / 3600000))),
+      );
+  }, [elapsedMs, screen]);
 
   const advanceStation = useCallback(() => {
     const currentIndex = stationIndexRef.current;
@@ -460,13 +483,7 @@ export default function App() {
       : null;
   const legMeters =
     fromStop && toStop ? (toStop.meters - fromStop.meters) * legProgress : 0;
-  const traveledKm = (traveledMetersRef.current + legMeters) / 1000;
-  // Wait a second before showing a speed so the first keystrokes don't
-  // read as a rocket launch.
-  const speedKmh =
-    screen === "game" && elapsedMs > 1000
-      ? Math.round(traveledKm / (elapsedMs / 3600000))
-      : 0;
+  currentMetersRef.current = traveledMetersRef.current + legMeters;
 
   const showChrome = screen !== "game";
 
