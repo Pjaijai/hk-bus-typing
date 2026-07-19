@@ -917,6 +917,68 @@ footer a {
   gap: 8px;
 }
 
+/* Desktop-only driver avatar tucked in the top-right corner, below the HUD. */
+.game-driver {
+  position: absolute;
+  top: 84px;
+  right: 20px;
+  z-index: 19;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.game-driver img {
+  width: 132px;
+  height: 132px;
+  object-fit: contain;
+  border-radius: 16px;
+  border: 2px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.game-driver-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.game-driver-focused img {
+  border-color: color-mix(in srgb, orange 60%, var(--line));
+}
+
+.game-driver-nervous img {
+  border-color: color-mix(in srgb, crimson 70%, var(--line));
+  box-shadow: 0 0 0 3px color-mix(in srgb, crimson 25%, transparent), var(--shadow);
+}
+
+.game-driver-focused .game-driver-label {
+  color: color-mix(in srgb, orange 70%, var(--text));
+}
+
+.game-driver-nervous .game-driver-label {
+  color: crimson;
+}
+
+/* Hide the driver on phones / touch layouts — desktop only. */
+@media (max-width: 900px), (pointer: coarse) {
+  .game-driver {
+    display: none;
+  }
+}
+
 .game-top .back-button,
 .game-top .sound-button,
 .game-line,
