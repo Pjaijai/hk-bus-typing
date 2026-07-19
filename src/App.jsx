@@ -276,7 +276,10 @@ export default function App() {
       finishGame();
   }, [elapsedMs, finishGame, mode, screen]);
 
-  // Sampled on every 200ms tick; speed = metres gained across a 5s window.
+  // Sampled on every 200ms tick; the target speed is metres gained across
+  // a 5s window, capped at a bus-plausible 150. The displayed value eases
+  // toward it like a needle, so it winds up over a second or two instead
+  // of leaping the moment you start typing.
   useEffect(() => {
     if (screen !== "game") return;
     const samples = speedSamplesRef.current;
@@ -285,10 +288,12 @@ export default function App() {
     const first = samples[0];
     const last = samples[samples.length - 1];
     const span = last.ms - first.ms;
-    if (span >= 500)
-      setSpeedKmh(
-        Math.max(0, Math.round((last.m - first.m) / 1000 / (span / 3600000))),
-      );
+    if (span < 500) return;
+    const target = Math.min(
+      150,
+      Math.max(0, (last.m - first.m) / 1000 / (span / 3600000)),
+    );
+    setSpeedKmh((value) => value + (target - value) * 0.12);
   }, [elapsedMs, screen]);
 
   const advanceStation = useCallback(() => {

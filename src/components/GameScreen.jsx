@@ -110,7 +110,7 @@ export function GameScreen({
         <div className="game-top-right">
           <div className="game-timer game-speed" role="status">
             <small>km/h</small>
-            <strong>{speedKmh}</strong>
+            <strong>{Math.round(speedKmh)}</strong>
           </div>
           <button
             type="button"
