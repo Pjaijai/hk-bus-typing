@@ -121,6 +121,12 @@ export function contrastText(hex) {
   return luminance > 0.6 ? "#20242a" : "#ffffff";
 }
 
+// Kept for callers that only have the operator on hand (no baked colour):
+// Citybus yellow needs dark text, every other operator livery carries white.
+export function routeTextColor(co) {
+  return primaryOperator(co) === "ctb" ? "#20242a" : "#ffffff";
+}
+
 function serviceKey(serviceType) {
   return String(serviceType);
 }
