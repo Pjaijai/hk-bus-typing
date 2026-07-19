@@ -1258,7 +1258,7 @@ footer a {
 @media (max-width: 640px) {
   .island {
     width: calc(100% - 16px);
-    bottom: max(24px, calc(env(safe-area-inset-bottom) + 14px));
+    bottom: max(48px, calc(env(safe-area-inset-bottom) + 38px));
     padding: 13px 14px;
     border-radius: 18px;
   }
@@ -1273,8 +1273,6 @@ footer a {
   }
 
   .landing-credits {
-    top: max(64px, calc(env(safe-area-inset-top) + 58px));
-    bottom: auto;
     right: 10px;
     font-size: 10px;
   }
