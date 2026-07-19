@@ -5,7 +5,6 @@ import {
   ChevronUp,
   ExternalLink,
   Github,
-  Play,
 } from "lucide-react";
 import { HKMap } from "./HKMap";
 import { SearchBox } from "./SearchBox";
@@ -253,7 +252,6 @@ export function HomeScreen({
                 style={{ "--line-color": selectedRoute.color }}
                 onClick={onStart}
               >
-                <Play size={15} />
                 {t("start")}
               </button>
             </div>

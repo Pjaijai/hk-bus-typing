@@ -1,4 +1,4 @@
-import { ChevronLeft, Play, RefreshCw, Trophy } from "lucide-react";
+import { ChevronLeft, RefreshCw, Trophy } from "lucide-react";
 import { getLineRuns, getRunLabel } from "../lib/data";
 import { routeTextColor } from "../lib/busNormalize";
 import { UI_LOCALES } from "../lib/i18n";
@@ -102,7 +102,6 @@ export function ChallengeLanding({
             disabled={!name.trim()}
             onClick={onStart}
           >
-            <Play size={15} />
             {t("start")}
           </button>
           <button type="button" className="ghost-button" onClick={onSkip}>
