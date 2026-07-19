@@ -43,6 +43,7 @@ export function HKMap({
   activeRun = null,
   currentStopIndex = null,
   completedCount = 0,
+  busLength = null,
   busShake = false,
   initialViewBox = null,
   className = "",
@@ -62,13 +63,12 @@ export function HKMap({
         .filter((index, i, arr) => index >= 0 && arr.indexOf(index) === i)
         .map((index) => ({ stop: stops[index], index }));
 
+  // The bus sits at an arc length along the run's geometry — callers move
+  // it continuously (typing progress) or park it at a stop's length.
+  const busAt = busLength ?? stops[currentStopIndex ?? -1]?.length ?? null;
   const bus =
-    activeRun && currentStopIndex != null && stops[currentStopIndex]
-      ? pointAtLength(
-          activeRun.geometry,
-          activeRun.lengths,
-          stops[currentStopIndex].length,
-        )
+    activeRun && busAt != null
+      ? pointAtLength(activeRun.geometry, activeRun.lengths, busAt)
       : null;
 
   return (

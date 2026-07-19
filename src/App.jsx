@@ -105,6 +105,12 @@ export default function App() {
   const [elapsedMs, setElapsedMs] = useState(0);
   const [shake, setShake] = useState(false);
   const [compositionText, setCompositionText] = useState("");
+  // Wrong keystrokes drag the bus back along the road (visual only —
+  // the typing cursor never moves back).
+  const [stopPenalty, setStopPenalty] = useState(0);
+  // Metres already banked at completed stops; the current leg's partial
+  // distance is derived from typing progress each render.
+  const traveledMetersRef = useRef(0);
 
   const startTimeRef = useRef(0);
   const typingInputRef = useRef(null);
@@ -122,6 +128,10 @@ export default function App() {
     [selectedRoute, runIndex],
   );
   const runs = useMemo(() => getLineRuns(selectedRoute), [selectedRoute]);
+  const runModel =
+    mapModel?.routes.find((route) => route.id === selectedRouteId)?.runs[
+      runIndex
+    ] ?? null;
   const runLabel = getRunLabel(runs[runIndex] ?? runs[0], locale === UI_LOCALES.ZH);
 
   const attempts = correct + errors;
@@ -210,6 +220,8 @@ export default function App() {
     setErrors(0);
     setCompleted(0);
     setElapsedMs(0);
+    setStopPenalty(0);
+    traveledMetersRef.current = 0;
     startTimeRef.current = performance.now();
     setScreen("game");
     typingInputRef.current?.focus({ preventScroll: true });
@@ -259,6 +271,11 @@ export default function App() {
   const advanceStation = useCallback(() => {
     const currentIndex = stationIndexRef.current;
     setCompleted((value) => value + 1);
+    // Bank the finished leg's real distance for the km/h readout.
+    const from = runModel?.stops[currentIndex - 1];
+    const to = runModel?.stops[currentIndex];
+    if (from && to) traveledMetersRef.current += to.meters - from.meters;
+    setStopPenalty(0);
     if (mode === "line" && currentIndex >= stations.length - 1) {
       finishGame();
       return;
@@ -269,7 +286,7 @@ export default function App() {
     stationIndexRef.current = nextIndex;
     setStationIndex(nextIndex);
     setTypedIndex(0);
-  }, [finishGame, mode, stations.length]);
+  }, [finishGame, mode, runModel, stations.length]);
 
   const typeCharacter = useCallback(
     (character) => {
@@ -286,6 +303,7 @@ export default function App() {
         else setTypedIndex(typedIndexRef.current);
       } else {
         setErrors((value) => value + 1);
+        setStopPenalty((value) => value + 1);
         playError();
         setShake(false);
         requestAnimationFrame(() => setShake(true));
@@ -425,6 +443,31 @@ export default function App() {
   ]);
 
   const currentTarget = getTypingTarget(stations[stationIndex], typingLanguage);
+
+  // While typing stop k the bus travels the leg from stop k-1 to stop k,
+  // proportionally to correct characters; errors pull it back a character.
+  const targetLength = [...currentTarget].length;
+  const effectiveTyped = Math.max(0, typedIndex - stopPenalty);
+  const legProgress = targetLength
+    ? Math.min(effectiveTyped / targetLength, 1)
+    : 0;
+  const fromStop =
+    runModel?.stops[stationIndex - 1] ?? runModel?.stops[stationIndex] ?? null;
+  const toStop = runModel?.stops[stationIndex] ?? null;
+  const busLength =
+    fromStop && toStop
+      ? fromStop.length + (toStop.length - fromStop.length) * legProgress
+      : null;
+  const legMeters =
+    fromStop && toStop ? (toStop.meters - fromStop.meters) * legProgress : 0;
+  const traveledKm = (traveledMetersRef.current + legMeters) / 1000;
+  // Wait a second before showing a speed so the first keystrokes don't
+  // read as a rocket launch.
+  const speedKmh =
+    screen === "game" && elapsedMs > 1000
+      ? Math.round(traveledKm / (elapsedMs / 3600000))
+      : 0;
+
   const showChrome = screen !== "game";
 
   return (
@@ -526,6 +569,8 @@ export default function App() {
             line={selectedRoute}
             runIndex={runIndex}
             runLabel={runLabel}
+            busLength={busLength}
+            speedKmh={speedKmh}
             stations={stations}
             mode={mode}
             stationIndex={stationIndex}

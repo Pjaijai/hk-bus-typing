@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { HKMap } from "./HKMap";
 import { getPairViewBox, getRouteViewBox } from "../lib/map";
+import { pointAtLength } from "../lib/busGeometry";
 import { routeTextColor } from "../lib/busNormalize";
 import { TYPING_LANGUAGES } from "../lib/typing";
 import { UI_LOCALES } from "../lib/i18n";
@@ -19,6 +20,8 @@ export function GameScreen({
   line,
   runIndex,
   runLabel,
+  busLength,
+  speedKmh,
   stations,
   mode,
   stationIndex,
@@ -41,19 +44,24 @@ export function GameScreen({
   const activeRun = route?.runs[runIndex] ?? route?.runs[0] ?? null;
   const station = stations[stationIndex];
   const nextStation = stations[(stationIndex + 1) % stations.length];
-  // Tracking camera: frame the current stop and its neighbour (the previous
-  // one at the end of the route), falling back to the whole route.
+  // Tracking camera: hug the moving bus and the stop it is driving to,
+  // falling back to the whole route. Retargeting every keystroke is fine —
+  // the viewBox animation glides between targets.
   const viewBox = useMemo(() => {
+    const busPoint =
+      activeRun && busLength != null
+        ? pointAtLength(activeRun.geometry, activeRun.lengths, busLength).point
+        : null;
     const points = [
-      activeRun?.stops[stationIndex],
-      activeRun?.stops[stationIndex + 1] ?? activeRun?.stops[stationIndex - 1],
-    ]
-      .filter(Boolean)
-      .map((stop) => stop.point);
+      busPoint,
+      activeRun?.stops[stationIndex]?.point,
+      activeRun?.stops[stationIndex + 1]?.point ??
+        activeRun?.stops[stationIndex - 1]?.point,
+    ].filter(Boolean);
     return points.length
-      ? getPairViewBox(points, 130, 36, 0.16)
+      ? getPairViewBox(points, 70, 30, 0.16)
       : getRouteViewBox(route, 320, 64, 0.16);
-  }, [activeRun, route, stationIndex]);
+  }, [activeRun, busLength, route, stationIndex]);
   // Pressing start flies the camera in from the whole route to the first
   // station; keep the initial frame stable across re-renders.
   const routeViewBox = useMemo(
@@ -80,6 +88,7 @@ export function GameScreen({
           activeRun={activeRun}
           currentStopIndex={stationIndex}
           completedCount={stationIndex}
+          busLength={busLength}
           busShake={shake}
         />
       </div>
@@ -100,6 +109,10 @@ export function GameScreen({
           <strong>{runLabel}</strong>
         </div>
         <div className="game-top-right">
+          <div className="game-timer game-speed" role="status">
+            <small>km/h</small>
+            <strong>{speedKmh}</strong>
+          </div>
           <button
             type="button"
             className="sound-button"

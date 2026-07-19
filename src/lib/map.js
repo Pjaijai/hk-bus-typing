@@ -1,5 +1,10 @@
 import { geoMercator, geoPath } from "d3-geo";
-import { cumulativeLengths, pointAt, positionToLength } from "./busGeometry.js";
+import {
+  cumulativeLengths,
+  distanceMeters,
+  pointAt,
+  positionToLength,
+} from "./busGeometry.js";
 
 // Hong Kong is wider than tall, so the home map uses a landscape canvas.
 export const MAP_VIEWBOX = [0, 0, 960, 620];
@@ -45,6 +50,9 @@ export function buildMapModel(boundaryFeature, routes) {
         });
       const geometry = rawGeometry.map((point) => projection(point));
       const lengths = cumulativeLengths(geometry);
+      // Real-world arc lengths (metres, from the unprojected polyline)
+      // drive the km/h readout; screen lengths drive the marker.
+      const metersLengths = cumulativeLengths(rawGeometry, distanceMeters);
       const stops = stopIds.map((id, stopIndex) => {
         const position = route.stopPositions?.[runIndex]?.[stopIndex] ?? {
           i: stopIndex,
@@ -54,6 +62,12 @@ export function buildMapModel(boundaryFeature, routes) {
           station: stationById.get(id),
           point: pointAt(geometry, position.i, position.t),
           length: positionToLength(geometry, lengths, position),
+          meters: positionToLength(
+            rawGeometry,
+            metersLengths,
+            position,
+            distanceMeters,
+          ),
         };
       });
       return { index: runIndex, geometry, lengths, stops };
