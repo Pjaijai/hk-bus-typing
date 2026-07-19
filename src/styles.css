@@ -1458,13 +1458,41 @@ footer a {
     font-size: 10px;
   }
 
-  /* Minimal in-game layout: the typing panel rides at the top so the map
-     fills the space below it and the moving bus stays in view while you
-     type. Stats grid and station heading are dropped — just the text to
-     type with the two-dot bus progress above it. */
+  /* Minimal in-game layout: stack the HUD and the typing panel in normal
+     flow at the top so every chip wraps onto its own line instead of
+     overflowing, with the map filling the space below and the moving bus
+     staying in view. Both are position:relative so they paint above the
+     absolutely-positioned map. */
+  .game {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .game-map-bg {
+    z-index: 0;
+  }
+
+  .game-top {
+    position: relative;
+    flex-wrap: wrap;
+    z-index: 20;
+  }
+
+  .game-top-right {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
   .game-island {
-    top: calc(env(safe-area-inset-top, 0px) + 58px);
+    position: relative;
+    top: auto;
     bottom: auto;
+    transform: none;
+    left: auto;
+    align-self: center;
+    margin-top: 8px;
+    max-height: none;
+    z-index: 10;
   }
 
   .game-island .game-stats,
@@ -1531,13 +1559,21 @@ footer a {
     display: none;
   }
 
-  .game-line strong,
+  /* Timers keep their numbers on one line; the route label may wrap so a
+     long run name never pushes the row off-screen. */
   .game-timer {
     white-space: nowrap;
   }
 
+  .game-line {
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+
   .game-line strong {
     font-size: 13px;
+    min-width: 0;
+    overflow-wrap: anywhere;
   }
 }
 
