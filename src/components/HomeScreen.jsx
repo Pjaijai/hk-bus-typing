@@ -4,6 +4,7 @@ import {
   ChevronLeft,
   ChevronUp,
   ExternalLink,
+  Github,
   Play,
 } from "lucide-react";
 import { HKMap } from "./HKMap";
@@ -124,6 +125,14 @@ export function HomeScreen({
         >
           {t("mapCredit")}
         </a>
+        {" · "}
+        <a
+          href="https://github.com/Pjaijai/hk-bus-typing"
+          target="_blank"
+          rel="noreferrer"
+        >
+          GitHub
+        </a>
       </p>
       <div className={`island${collapsed ? " collapsed" : ""}`}>
         <button
@@ -140,18 +149,29 @@ export function HomeScreen({
             <div className="island-title">
               <h1>{t("appName")}</h1>
               <p>{t("tagline")}</p>
-              <a
-                className="mtr-link"
-                href="https://mtr-typing.paulwong.dev/"
-                target="_blank"
-                rel="noreferrer"
-              >
-                <span className="line-chip" style={{ background: "#E60012" }}>
-                  MTR
-                </span>
-                {t("mtrGame")}
-                <ExternalLink size={12} aria-hidden="true" />
-              </a>
+              <span className="island-links">
+                <a
+                  className="mtr-link"
+                  href="https://github.com/Pjaijai/hk-bus-typing"
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="GitHub"
+                >
+                  <Github size={14} aria-hidden="true" />
+                </a>
+                <a
+                  className="mtr-link"
+                  href="https://mtr-typing.paulwong.dev/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <span className="line-chip" style={{ background: "#E60012" }}>
+                    MTR
+                  </span>
+                  {t("mtrGame")}
+                  <ExternalLink size={12} aria-hidden="true" />
+                </a>
+              </span>
             </div>
             <SearchBox
               t={t}

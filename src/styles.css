@@ -479,15 +479,20 @@ footer a {
   gap: 8px;
 }
 
-/* Crossover link to the sibling MTR typing game. */
+/* GitHub + crossover link to the sibling MTR typing game. */
 .island-title {
   position: relative;
 }
 
-.mtr-link {
+.island-links {
   position: absolute;
   top: 0;
   right: 0;
+  display: flex;
+  gap: 6px;
+}
+
+.mtr-link {
   display: inline-flex;
   align-items: center;
   gap: 6px;
