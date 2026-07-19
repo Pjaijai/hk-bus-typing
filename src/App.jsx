@@ -120,6 +120,9 @@ export default function App() {
   const [completed, setCompleted] = useState(0);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [shake, setShake] = useState(false);
+  // Pulses true for a moment every 10th streak — a little "boost" flourish
+  // on the bus itself, mirroring how shake flashes on a mistake.
+  const [busBoost, setBusBoost] = useState(false);
   const [compositionText, setCompositionText] = useState("");
   // Wrong keystrokes drag the bus back along the road (visual only —
   // the typing cursor never moves back).
@@ -278,6 +281,7 @@ export default function App() {
     setErrors(0);
     setStreak(0);
     setBestStreak(0);
+    setBusBoost(false);
     setCompleted(0);
     setElapsedMs(0);
     setStopPenalty(0);
@@ -393,6 +397,11 @@ export default function App() {
         setStreak((value) => {
           const next = value + 1;
           setBestStreak((best) => Math.max(best, next));
+          if (next % 10 === 0) {
+            setBusBoost(false);
+            requestAnimationFrame(() => setBusBoost(true));
+            setTimeout(() => setBusBoost(false), 500);
+          }
           return next;
         });
         playKeystroke();
@@ -684,6 +693,7 @@ export default function App() {
             busLength={busLength}
             speedKmh={speedKmh}
             streak={streak}
+            busBoost={busBoost}
             stations={stations}
             mode={mode}
             stationIndex={stationIndex}

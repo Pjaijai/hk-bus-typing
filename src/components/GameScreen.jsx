@@ -23,6 +23,7 @@ export function GameScreen({
   busLength,
   speedKmh,
   streak,
+  busBoost,
   stations,
   mode,
   stationIndex,
@@ -92,6 +93,7 @@ export function GameScreen({
           busLength={busLength}
           busShake={shake}
           busSpeeding={speedKmh > 150 ? 2 : speedKmh > 100 ? 1 : 0}
+          busBoost={busBoost}
         />
       </div>
       <div className="game-top">
