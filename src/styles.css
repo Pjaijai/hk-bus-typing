@@ -899,50 +899,6 @@ footer a {
   inset: 0;
 }
 
-/* Mobile-only driver backdrop: fills the play canvas where the map used to
-   be. Only mounted on narrow screens (see GameScreen JS), so the heavy PNG
-   never loads on desktop/tablet. */
-.game-driver-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-}
-
-.game-driver-bg img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 28%;
-}
-
-/* Fade the foot of the image into the canvas so the typing island reads. */
-.game-driver-bg::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    transparent 40%,
-    color-mix(in srgb, var(--bg) 88%, transparent) 100%
-  );
-}
-
-/* A red vignette when the driver panics, echoing the desktop avatar. */
-.game-driver-bg-nervous::after {
-  background:
-    radial-gradient(
-      120% 80% at 50% 40%,
-      transparent 55%,
-      color-mix(in srgb, crimson 22%, transparent) 100%
-    ),
-    linear-gradient(
-      to bottom,
-      transparent 40%,
-      color-mix(in srgb, var(--bg) 88%, transparent) 100%
-    );
-}
-
 .game-top {
   position: absolute;
   top: 0;
@@ -1502,15 +1458,13 @@ footer a {
     font-size: 10px;
   }
 
-  /* Minimal in-game layout: drop the map, the stats grid and the station
-     heading so the phone shows just the text to type with the two-dot bus
-     progress above it, on a plain canvas. */
-  .game-map-bg {
-    display: none;
-  }
-
-  .game {
-    background: var(--bg);
+  /* Minimal in-game layout: the typing panel rides at the top so the map
+     fills the space below it and the moving bus stays in view while you
+     type. Stats grid and station heading are dropped — just the text to
+     type with the two-dot bus progress above it. */
+  .game-island {
+    top: calc(env(safe-area-inset-top, 0px) + 58px);
+    bottom: auto;
   }
 
   .game-island .game-stats,
