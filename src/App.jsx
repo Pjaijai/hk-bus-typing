@@ -163,6 +163,9 @@ export default function App() {
   const [speedKmh, setSpeedKmh] = useState(0);
 
   const startTimeRef = useRef(0);
+  // The clock is armed at game start but only begins counting on the first
+  // keystroke, so staring at the screen before typing costs nothing.
+  const timerStartedRef = useRef(false);
   const typingInputRef = useRef(null);
   const gameActiveRef = useRef(false);
   const isComposingRef = useRef(false);
@@ -315,6 +318,8 @@ export default function App() {
     currentMetersRef.current = 0;
     speedSamplesRef.current = [];
     setSpeedKmh(0);
+    // Don't start the clock yet — the first keystroke does that.
+    timerStartedRef.current = false;
     startTimeRef.current = performance.now();
     setScreen("game");
     typingInputRef.current?.focus({ preventScroll: true });
@@ -339,7 +344,9 @@ export default function App() {
     gameActiveRef.current = false;
     resetTypingInput();
     typingInputRef.current?.blur();
-    const ms = performance.now() - startTimeRef.current;
+    const ms = timerStartedRef.current
+      ? performance.now() - startTimeRef.current
+      : 0;
     setElapsedMs(mode === "timed" ? Math.min(ms, TIMED_MS) : ms);
     playFinish();
     setScreen("result");
@@ -352,6 +359,7 @@ export default function App() {
   useEffect(() => {
     if (screen !== "game") return undefined;
     const timer = setInterval(() => {
+      if (!timerStartedRef.current) return;
       const ms = performance.now() - startTimeRef.current;
       setElapsedMs(mode === "timed" ? Math.min(ms, TIMED_MS) : ms);
     }, 200);
@@ -415,6 +423,11 @@ export default function App() {
       if (!gameActiveRef.current || [...character].length !== 1) return;
       const station = stations[stationIndexRef.current];
       if (!station) return;
+      // Arm the clock on the very first keystroke of the run.
+      if (!timerStartedRef.current) {
+        timerStartedRef.current = true;
+        startTimeRef.current = performance.now();
+      }
       const targetCharacters = [...getTypingTarget(station, typingLanguage)];
       const expected = targetCharacters[typedIndexRef.current];
       if (isTypingCharacterMatch(character, expected, typingLanguage)) {
