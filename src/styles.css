@@ -393,6 +393,23 @@ footer a {
   border-color: var(--line-color);
 }
 
+.line-pill .pill-label {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.operator-group {
+  margin-top: 12px;
+}
+
+.operator-group .operator-label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--line-color);
+}
+
 .island-head {
   display: flex;
   align-items: center;

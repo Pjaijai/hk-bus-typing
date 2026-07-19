@@ -1,7 +1,7 @@
 // All sounds are synthesized with the Web Audio API, so no audio assets
 // are shipped. The context is created lazily inside a user gesture
 // (first keystroke / start click) to satisfy autoplay policies.
-const STORAGE_KEY = "hk-mtr-typing-muted";
+const STORAGE_KEY = "hk-bus-typing-muted";
 
 let context = null;
 let muted = false;

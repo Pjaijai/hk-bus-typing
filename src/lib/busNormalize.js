@@ -37,6 +37,11 @@ export function routeColor(co) {
   return OPERATOR_COLORS[primaryOperator(co)] ?? "#888888";
 }
 
+// Citybus yellow needs dark text; the other operator colours carry white.
+export function routeTextColor(co) {
+  return primaryOperator(co) === "ctb" ? "#20242a" : "#ffffff";
+}
+
 function serviceKey(serviceType) {
   return String(serviceType);
 }

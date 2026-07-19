@@ -1,4 +1,5 @@
 import { geoMercator, geoPath } from "d3-geo";
+import { cumulativeLengths, pointAt, positionToLength } from "./busGeometry.js";
 
 // Hong Kong is wider than tall, so the home map uses a landscape canvas.
 export const MAP_VIEWBOX = [0, 0, 960, 620];
@@ -17,9 +18,10 @@ const HK_BOUNDS = {
   ],
 };
 
-export const JOURNEY_COLOR = "#e6007e";
-
-export function buildMapModel(boundaryFeature, lines) {
+// Projects everything once: route geometry to screen polylines, and each
+// run's stops onto that polyline (via their {i, t} params) so dots sit
+// exactly on the drawn path and the bus can ride it by arc length.
+export function buildMapModel(boundaryFeature, routes) {
   const projection = geoMercator().fitExtent(
     [
       [24, 24],
@@ -30,45 +32,41 @@ export function buildMapModel(boundaryFeature, lines) {
   const path = geoPath(projection);
   const boundaryPath = path(boundaryFeature);
 
-  const routes = lines.map((line) => {
-    const pointsById = new Map(
-      line.stations.map((station) => [
-        station.id,
-        projection([station.lon, station.lat]),
-      ]),
+  const mapRoutes = routes.map((route) => {
+    const stationById = new Map(
+      route.stations.map((station) => [station.id, station]),
     );
-    const segments = line.segments
-      .map((stationIds) =>
-        stationIds.map((id) => pointsById.get(id)).filter(Boolean),
-      )
-      .filter((points) => points.length > 1);
-    const stations = line.stations.map((station) => ({
-      ...station,
-      point: pointsById.get(station.id),
-    }));
-    return { ...line, pointsById, segments, stations };
+    const runs = route.segments.map((stopIds, runIndex) => {
+      const rawGeometry =
+        route.geometries?.[runIndex] ??
+        stopIds.map((id) => {
+          const station = stationById.get(id);
+          return [station.lon, station.lat];
+        });
+      const geometry = rawGeometry.map((point) => projection(point));
+      const lengths = cumulativeLengths(geometry);
+      const stops = stopIds.map((id, stopIndex) => {
+        const position = route.stopPositions?.[runIndex]?.[stopIndex] ?? {
+          i: stopIndex,
+          t: 0,
+        };
+        return {
+          station: stationById.get(id),
+          point: pointAt(geometry, position.i, position.t),
+          length: positionToLength(geometry, lengths, position),
+        };
+      });
+      return { index: runIndex, geometry, lengths, stops };
+    });
+    return {
+      ...route,
+      runs,
+      // Drawing and camera framing both consume the projected polylines.
+      segments: runs.map((run) => run.geometry),
+    };
   });
 
-  const pointsById = new Map();
-  for (const route of routes)
-    for (const [id, point] of route.pointsById)
-      if (!pointsById.has(id)) pointsById.set(id, point);
-
-  return { boundaryPath, routes, pointsById };
-}
-
-// A route-shaped overlay for a cross-line journey, drawable by HKMap.
-export function buildJourneyRoute(mapModel, stationIds) {
-  const points = stationIds
-    .map((id) => mapModel.pointsById.get(id))
-    .filter(Boolean);
-  if (points.length < 2) return null;
-  return {
-    id: "journey",
-    color: JOURNEY_COLOR,
-    segments: [points],
-    pointsById: mapModel.pointsById,
-  };
+  return { boundaryPath, routes: mapRoutes };
 }
 
 // verticalOffsetRatio shifts the viewBox down so the route renders above
@@ -98,7 +96,7 @@ export function getRouteViewBox(
   ];
 }
 
-// Frames a small set of points (current + next station) for the in-game
+// Frames a small set of points (current + next stop) for the in-game
 // tracking camera. minimumWidth keeps it from zooming in absurdly close.
 export function getPairViewBox(
   points,

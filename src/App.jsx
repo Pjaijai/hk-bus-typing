@@ -3,14 +3,8 @@ import { Languages, Moon, Sun } from "lucide-react";
 import { HomeScreen } from "./components/HomeScreen";
 import { GameScreen } from "./components/GameScreen";
 import { ResultScreen } from "./components/ResultScreen";
-import { buildJourneyRoute, buildMapModel, JOURNEY_COLOR } from "./lib/map";
-import {
-  buildNetwork,
-  findJourney,
-  getLineRuns,
-  getPlayableStations,
-  ROUTE_DIRECTIONS,
-} from "./lib/data";
+import { buildMapModel } from "./lib/map";
+import { getLineRuns, getPlayableStations, getRunLabel } from "./lib/data";
 import {
   getTypingTarget,
   isTypingCharacterMatch,
@@ -38,21 +32,13 @@ const safeStorage = () =>
 
 const TIMED_MS = 30000;
 
-const JOURNEY_LINE = {
-  id: "journey",
-  code: "⇄",
-  nameZh: "自由行程",
-  nameEn: "Journey",
-  color: JOURNEY_COLOR,
-};
-
 function useNetworkData() {
   const [state, setState] = useState({ data: null, boundary: null, error: null });
   useEffect(() => {
     let cancelled = false;
     Promise.all([
-      fetch("/data/mtr.json").then((r) => {
-        if (!r.ok) throw new Error(`mtr.json HTTP ${r.status}`);
+      fetch("/data/bus.json").then((r) => {
+        if (!r.ok) throw new Error(`bus.json HTTP ${r.status}`);
         return r.json();
       }),
       fetch("/data/hk-boundary.json").then((r) => {
@@ -75,9 +61,15 @@ function useNetworkData() {
 
 export default function App() {
   const { data, boundary, error } = useNetworkData();
+  // Routes loaded through search-all join the featured set at runtime.
+  const [extraRoutes, setExtraRoutes] = useState([]);
+  const routes = useMemo(
+    () => (data ? [...data.routes, ...extraRoutes] : []),
+    [data, extraRoutes],
+  );
   const mapModel = useMemo(
-    () => (data && boundary ? buildMapModel(boundary, data.lines) : null),
-    [data, boundary],
+    () => (routes.length && boundary ? buildMapModel(boundary, routes) : null),
+    [routes, boundary],
   );
 
   const [locale, setLocale] = useState(() =>
@@ -89,12 +81,8 @@ export default function App() {
   const t = useCallback((key) => translate(locale, key), [locale]);
 
   const [screen, setScreen] = useState("home");
-  const [selectedLineId, setSelectedLineId] = useState(null);
-  const [journeyOpen, setJourneyOpen] = useState(false);
-  const [journeyFrom, setJourneyFrom] = useState("");
-  const [journeyTo, setJourneyTo] = useState("");
+  const [selectedRouteId, setSelectedRouteId] = useState(null);
   const [runIndex, setRunIndex] = useState(0);
-  const [direction, setDirection] = useState(ROUTE_DIRECTIONS.FORWARD);
   const [mode, setMode] = useState("timed");
   const [typingLanguage, setTypingLanguage] = useState(TYPING_LANGUAGES.ENGLISH);
   const [dark, setDark] = useState(
@@ -123,38 +111,18 @@ export default function App() {
   const gameActiveRef = useRef(false);
   const isComposingRef = useRef(false);
   // Fast bursts of keystrokes can outrun React renders, so the cursor and
-  // active station are also tracked synchronously in refs.
+  // active stop are also tracked synchronously in refs.
   const typedIndexRef = useRef(0);
   const stationIndexRef = useRef(0);
 
-  const selectedLine =
-    data?.lines.find((line) => line.id === selectedLineId) ?? null;
-  const network = useMemo(
-    () => (data ? buildNetwork(data.lines) : null),
-    [data],
-  );
-  const journeyStations = useMemo(
-    () => (network ? findJourney(network, journeyFrom, journeyTo) : []),
-    [network, journeyFrom, journeyTo],
-  );
+  const selectedRoute =
+    routes.find((route) => route.id === selectedRouteId) ?? null;
   const stations = useMemo(
-    () =>
-      journeyOpen
-        ? journeyStations
-        : getPlayableStations(selectedLine, runIndex, direction),
-    [journeyOpen, journeyStations, selectedLine, runIndex, direction],
+    () => getPlayableStations(selectedRoute, runIndex),
+    [selectedRoute, runIndex],
   );
-  const activeLine = journeyOpen ? JOURNEY_LINE : selectedLine;
-  const journeyRoute = useMemo(
-    () =>
-      journeyOpen && mapModel && journeyStations.length > 1
-        ? buildJourneyRoute(
-            mapModel,
-            journeyStations.map((station) => station.id),
-          )
-        : null,
-    [journeyOpen, mapModel, journeyStations],
-  );
+  const runs = useMemo(() => getLineRuns(selectedRoute), [selectedRoute]);
+  const runLabel = getRunLabel(runs[runIndex] ?? runs[0], locale === UI_LOCALES.ZH);
 
   const attempts = correct + errors;
   const remaining = Math.max(Math.ceil((TIMED_MS - elapsedMs) / 1000), 0);
@@ -195,30 +163,31 @@ export default function App() {
     setCompositionText("");
   }, []);
 
-  const selectLine = useCallback((lineId) => {
-    setJourneyOpen(false);
-    setSelectedLineId(lineId);
+  const selectRoute = useCallback((routeId) => {
+    setSelectedRouteId(routeId);
     setRunIndex(0);
-    setDirection(ROUTE_DIRECTIONS.FORWARD);
     window.scrollTo({ top: 0 });
   }, []);
 
-  const clearLine = useCallback(() => {
-    setSelectedLineId(null);
-    setJourneyOpen(false);
+  // Search-all hands over a freshly normalized route object; register it
+  // and select it in one step.
+  const addLoadedRoute = useCallback((route) => {
+    setExtraRoutes((current) =>
+      current.some((existing) => existing.id === route.id)
+        ? current
+        : [...current, route],
+    );
+    setSelectedRouteId(route.id);
     setRunIndex(0);
-    setDirection(ROUTE_DIRECTIONS.FORWARD);
   }, []);
 
-  const openJourney = useCallback(() => {
-    setSelectedLineId(null);
-    setJourneyOpen(true);
-    setMode("line");
+  const clearRoute = useCallback(() => {
+    setSelectedRouteId(null);
+    setRunIndex(0);
   }, []);
 
   const selectRun = useCallback((index) => {
     setRunIndex(index);
-    setDirection(ROUTE_DIRECTIONS.FORWARD);
   }, []);
 
   const startGame = useCallback(() => {
@@ -237,18 +206,11 @@ export default function App() {
     setScreen("game");
     typingInputRef.current?.focus({ preventScroll: true });
     trackEvent("game_start", {
-      line: journeyOpen ? "journey" : (selectedLineId ?? "unknown"),
+      line: selectedRouteId ?? "unknown",
       mode,
       typing_language: typingLanguage,
     });
-  }, [
-    journeyOpen,
-    mode,
-    resetTypingInput,
-    selectedLineId,
-    stations.length,
-    typingLanguage,
-  ]);
+  }, [mode, resetTypingInput, selectedRouteId, stations.length, typingLanguage]);
 
   const backToHome = useCallback(() => {
     gameActiveRef.current = false;
@@ -371,15 +333,15 @@ export default function App() {
     const onKeyDown = (event) => {
       if (event.isComposing || event.keyCode === 229) return;
       const tag = event.target.tagName;
-      // Letters typed into a select drive its native type-ahead; Enter on a
-      // focused control should activate that control, not the shortcut.
+      // Letters typed into a field drive that field; Enter on a focused
+      // control should activate that control, not the shortcut.
       const inFormField =
         tag === "SELECT" || tag === "INPUT" || tag === "TEXTAREA";
       const onControl = inFormField || Boolean(event.target.closest?.("button, a"));
       if (event.key === "Escape") {
         if (screen === "game" || screen === "result") backToHome();
-        else if (screen === "home" && (selectedLineId || journeyOpen))
-          clearLine();
+        else if (screen === "home" && selectedRouteId) clearRoute();
+        else if (screen === "home") event.target.blur?.();
         return;
       }
       if (screen === "result") {
@@ -388,48 +350,25 @@ export default function App() {
       }
       if (screen === "home") {
         if (event.key === "Enter") {
-          // Enter is inert on a closed select, so let it start the game
-          // there — journey players pick stations without leaving the field.
-          const startAllowed =
-            !onControl || (tag === "SELECT" && journeyOpen);
-          if (startAllowed && stations.length > 1) startGame();
+          if (!onControl && stations.length > 1) startGame();
           return;
         }
         if (inFormField || event.metaKey || event.ctrlKey || event.altKey)
           return;
         const key = event.key.toLowerCase();
-        if (key === "j") {
-          openJourney();
+        if (key === "s") {
+          event.preventDefault();
+          document.getElementById("route-search")?.focus();
           return;
         }
         if (/^\d$/.test(key) && data) {
-          const line = data.lines[key === "0" ? 9 : Number(key) - 1];
-          if (line) selectLine(line.id);
+          const route = data.routes[key === "0" ? 9 : Number(key) - 1];
+          if (route) selectRoute(route.id);
           return;
         }
-        if (journeyOpen) {
-          if (key === "f") {
-            event.preventDefault();
-            document.getElementById("journey-from")?.focus();
-          } else if (key === "t") {
-            event.preventDefault();
-            document.getElementById("journey-to")?.focus();
-          } else if (key === "l") {
-            setTypingLanguage((value) =>
-              value === TYPING_LANGUAGES.ENGLISH
-                ? TYPING_LANGUAGES.CHINESE
-                : TYPING_LANGUAGES.ENGLISH,
-            );
-          }
-          return;
-        }
-        if (!selectedLineId) return;
+        if (!selectedRouteId) return;
         if (key === "d") {
-          setDirection((value) =>
-            value === ROUTE_DIRECTIONS.FORWARD
-              ? ROUTE_DIRECTIONS.REVERSE
-              : ROUTE_DIRECTIONS.FORWARD,
-          );
+          if (runs.length > 1) selectRun((runIndex + 1) % runs.length);
         } else if (key === "m") {
           setMode((value) => (value === "timed" ? "line" : "timed"));
         } else if (key === "t") {
@@ -438,9 +377,6 @@ export default function App() {
               ? TYPING_LANGUAGES.CHINESE
               : TYPING_LANGUAGES.ENGLISH,
           );
-        } else if (key === "r") {
-          const runCount = getLineRuns(selectedLine).length;
-          if (runCount > 1) selectRun((runIndex + 1) % runCount);
         }
         return;
       }
@@ -466,16 +402,14 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [
     backToHome,
-    clearLine,
+    clearRoute,
     data,
-    journeyOpen,
-    openJourney,
     runIndex,
+    runs,
     screen,
-    selectLine,
+    selectRoute,
     selectRun,
-    selectedLine,
-    selectedLineId,
+    selectedRouteId,
     startGame,
     stations,
     typeCharacter,
@@ -509,7 +443,7 @@ export default function App() {
             type="button"
             className="brand"
             onClick={() => {
-              clearLine();
+              clearRoute();
               backToHome();
             }}
           >
@@ -562,36 +496,28 @@ export default function App() {
             t={t}
             locale={locale}
             mapModel={mapModel}
-            lines={data.lines}
-            selectedLine={selectedLine}
-            journeyOpen={journeyOpen}
-            journeyFrom={journeyFrom}
-            journeyTo={journeyTo}
-            journeyStations={journeyStations}
-            journeyRoute={journeyRoute}
-            onJourneyOpen={openJourney}
-            onJourneyFromChange={setJourneyFrom}
-            onJourneyToChange={setJourneyTo}
+            routes={data.routes}
+            selectedRoute={selectedRoute}
             runIndex={runIndex}
             onRunChange={selectRun}
-            direction={direction}
-            onDirectionChange={setDirection}
             mode={mode}
             onModeChange={setMode}
             typingLanguage={typingLanguage}
             onTypingLanguageChange={setTypingLanguage}
-            onSelect={selectLine}
-            onClear={clearLine}
+            onSelect={selectRoute}
+            onRouteLoaded={addLoadedRoute}
+            onClear={clearRoute}
             onStart={startGame}
           />
         ) : null}
-        {mapModel && screen === "game" && activeLine && stations.length ? (
+        {mapModel && screen === "game" && selectedRoute && stations.length ? (
           <GameScreen
             t={t}
             locale={locale}
             mapModel={mapModel}
-            line={activeLine}
-            overlayRoute={journeyRoute}
+            line={selectedRoute}
+            runIndex={runIndex}
+            runLabel={runLabel}
             stations={stations}
             mode={mode}
             stationIndex={stationIndex}
@@ -618,7 +544,7 @@ export default function App() {
             elapsed={elapsed}
             completed={completed}
             metrics={metrics}
-            lineColor={activeLine?.color}
+            lineColor={selectedRoute?.color}
             onRetry={startGame}
             onBack={backToHome}
           />
@@ -629,8 +555,8 @@ export default function App() {
           <div className="footer-brand">
             <span className="footer-wordmark">{t("appName")}</span>
             <span className="footer-lines" aria-hidden="true">
-              {(data?.lines ?? []).map((line) => (
-                <i key={line.id} style={{ background: line.color }} />
+              {(data?.routes ?? []).slice(0, 12).map((route) => (
+                <i key={route.id} style={{ background: route.color }} />
               ))}
             </span>
           </div>
@@ -638,11 +564,11 @@ export default function App() {
             <p>
               <span className="footer-label">{t("dataCredit")}</span>
               <a
-                href="https://opendata.mtr.com.hk/"
+                href="https://github.com/hkbus/hk-bus-crawling"
                 target="_blank"
                 rel="noreferrer"
               >
-                {t("stationsCredit")}
+                {t("stopsCredit")}
               </a>
               <span className="footer-sep">·</span>
               <a

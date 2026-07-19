@@ -1,4 +1,4 @@
-import { TramFront } from "lucide-react";
+import { BusFront } from "lucide-react";
 
 export function ResultScreen({
   t,
@@ -12,7 +12,7 @@ export function ResultScreen({
   return (
     <section className="result" style={{ "--line-color": lineColor ?? "#E60012" }}>
       <div className="result-card">
-        <TramFront size={34} aria-hidden="true" />
+        <BusFront size={34} aria-hidden="true" />
         <h1>{t("resultTitle")}</h1>
         <div className="result-stats">
           <div>

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { HKMap } from "./HKMap";
 import { getPairViewBox, getRouteViewBox } from "../lib/map";
+import { routeTextColor } from "../lib/busNormalize";
 import { TYPING_LANGUAGES } from "../lib/typing";
 import { UI_LOCALES } from "../lib/i18n";
 
@@ -16,7 +17,8 @@ export function GameScreen({
   locale,
   mapModel,
   line,
-  overlayRoute = null,
+  runIndex,
+  runLabel,
   stations,
   mode,
   stationIndex,
@@ -35,27 +37,23 @@ export function GameScreen({
   onFocusTyping,
 }) {
   const useZh = locale === UI_LOCALES.ZH;
-  const route =
-    overlayRoute ?? mapModel.routes.find((r) => r.id === line.id);
+  const route = mapModel.routes.find((r) => r.id === line.id);
+  const activeRun = route?.runs[runIndex] ?? route?.runs[0] ?? null;
   const station = stations[stationIndex];
   const nextStation = stations[(stationIndex + 1) % stations.length];
   // Tracking camera: frame the current stop and its neighbour (the previous
-  // one at the end of the line), falling back to the whole route.
+  // one at the end of the route), falling back to the whole route.
   const viewBox = useMemo(() => {
-    const neighbour =
-      stations[stationIndex + 1] ?? stations[stationIndex - 1] ?? null;
-    const points = [station, neighbour]
+    const points = [
+      activeRun?.stops[stationIndex],
+      activeRun?.stops[stationIndex + 1] ?? activeRun?.stops[stationIndex - 1],
+    ]
       .filter(Boolean)
-      .map((s) => route?.pointsById.get(s.id))
-      .filter(Boolean);
+      .map((stop) => stop.point);
     return points.length
       ? getPairViewBox(points, 130, 36, 0.16)
       : getRouteViewBox(route, 320, 64, 0.16);
-  }, [route, station, stationIndex, stations]);
-  const completedIds = useMemo(
-    () => new Set(stations.slice(0, stationIndex).map((s) => s.id)),
-    [stations, stationIndex],
-  );
+  }, [activeRun, route, stationIndex]);
   // Pressing start flies the camera in from the whole route to the first
   // station; keep the initial frame stable across re-renders.
   const routeViewBox = useMemo(
@@ -79,11 +77,10 @@ export function GameScreen({
           viewBox={viewBox}
           initialViewBox={routeViewBox}
           selectedLineId={line.id}
-          overlayRoute={overlayRoute}
-          activeStationIds={stations.map((s) => s.id)}
-          currentStationId={station?.id ?? null}
-          completedStationIds={completedIds}
-          trainShake={shake}
+          activeRun={activeRun}
+          currentStopIndex={stationIndex}
+          completedCount={stationIndex}
+          busShake={shake}
         />
       </div>
       <div className="game-top">
@@ -91,16 +88,16 @@ export function GameScreen({
           type="button"
           className="back-button"
           onClick={onBack}
-          aria-label={t("backToLines")}
+          aria-label={t("backToRoutes")}
         >
           <ChevronLeft size={16} />
-          <span className="back-label">{t("backToLines")}</span>
+          <span className="back-label">{t("backToRoutes")}</span>
         </button>
         <div className="game-line">
-          <span className="line-chip" style={{ background: line.color }}>
+          <span className="line-chip" style={{ background: line.color, color: routeTextColor(line.co) }}>
             {line.code}
           </span>
-          <strong>{useZh ? line.nameZh : line.nameEn}</strong>
+          <strong>{runLabel}</strong>
         </div>
         <div className="game-top-right">
           <button
@@ -151,7 +148,7 @@ export function GameScreen({
             <strong>{metrics.accuracy}%</strong>
           </div>
           <div>
-            <small>{t("completedStations")}</small>
+            <small>{t("completedStops")}</small>
             <strong>
               {completed}
               {mode === "line" ? ` / ${stations.length}` : ""}
@@ -164,7 +161,7 @@ export function GameScreen({
         </div>
         <div className={`typing-panel${shake ? " shake" : ""}`}>
           <div className="station-names">
-            <small>{t("station")}</small>
+            <small>{t("stop")}</small>
             <h2>
               {typingLanguage === TYPING_LANGUAGES.CHINESE
                 ? station?.nameZh
