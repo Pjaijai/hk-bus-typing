@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ChevronDown,
   ChevronLeft,
@@ -72,9 +72,21 @@ export function GameScreen({
   const targetCharacters = [...target];
   const [collapsed, setCollapsed] = useState(false);
   const streakTier = streak >= 50 ? 3 : streak >= 25 ? 2 : streak >= 10 ? 1 : 0;
+  // Desktop gate: only mount the driver on wide, fine-pointer screens. This
+  // keeps the ~5-6MB avatar PNGs from ever being fetched on phones (a hidden
+  // <img> can still download), on top of the CSS that hides it. Reacts to
+  // viewport/orientation changes so the driver appears/disappears live.
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia?.("(min-width: 901px) and (pointer: fine)");
+    if (!mql) return undefined;
+    const update = () => setIsDesktop(mql.matches);
+    update();
+    mql.addEventListener?.("change", update);
+    return () => mql.removeEventListener?.("change", update);
+  }, []);
   // Driver mood tracks the bus speed: chill under 50 km/h, focused up to
-  // 100, nervous once the bus is flying. The image is desktop-only (hidden
-  // on narrow/touch screens via CSS) so it never crowds the phone layout.
+  // 100, nervous once the bus is flying.
   const driver =
     speedKmh > 100
       ? { src: "/driver/driver_nervous.png", mood: "nervous", label: useZh ? "亡命" : "Furious" }
@@ -105,10 +117,12 @@ export function GameScreen({
           busBoost={busBoost}
         />
       </div>
-      <div className={`game-driver game-driver-${driver.mood}`} aria-hidden="true">
-        <img src={driver.src} alt="" />
-        <span className="game-driver-label">{driver.label}</span>
-      </div>
+      {isDesktop ? (
+        <div className={`game-driver game-driver-${driver.mood}`} aria-hidden="true">
+          <img src={driver.src} alt="" />
+          <span className="game-driver-label">{driver.label}</span>
+        </div>
+      ) : null}
       <div className="game-top">
         <button
           type="button"
