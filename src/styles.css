@@ -899,6 +899,50 @@ footer a {
   inset: 0;
 }
 
+/* Mobile-only driver backdrop: fills the play canvas where the map used to
+   be. Only mounted on narrow screens (see GameScreen JS), so the heavy PNG
+   never loads on desktop/tablet. */
+.game-driver-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.game-driver-bg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 28%;
+}
+
+/* Fade the foot of the image into the canvas so the typing island reads. */
+.game-driver-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 40%,
+    color-mix(in srgb, var(--bg) 88%, transparent) 100%
+  );
+}
+
+/* A red vignette when the driver panics, echoing the desktop avatar. */
+.game-driver-bg-nervous::after {
+  background:
+    radial-gradient(
+      120% 80% at 50% 40%,
+      transparent 55%,
+      color-mix(in srgb, crimson 22%, transparent) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      transparent 40%,
+      color-mix(in srgb, var(--bg) 88%, transparent) 100%
+    );
+}
+
 .game-top {
   position: absolute;
   top: 0;

@@ -96,6 +96,18 @@ export function GameScreen({
     mql.addEventListener?.("change", update);
     return () => mql.removeEventListener?.("change", update);
   }, []);
+  // Narrow phones hide the map and instead show the driver as a full-bleed
+  // backdrop. Gate the heavy (~5-6MB) PNG behind the same JS check so wider
+  // screens never fetch it, mirroring the desktop-avatar gate above.
+  const [isNarrow, setIsNarrow] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia?.("(max-width: 640px)");
+    if (!mql) return undefined;
+    const update = () => setIsNarrow(mql.matches);
+    update();
+    mql.addEventListener?.("change", update);
+    return () => mql.removeEventListener?.("change", update);
+  }, []);
   // Driver mood tracks the bus speed: chill under 50 km/h, focused up to
   // 100, nervous once the bus is flying.
   const driver =
@@ -128,6 +140,14 @@ export function GameScreen({
           busBoost={busBoost}
         />
       </div>
+      {isNarrow ? (
+        <div
+          className={`game-driver-bg game-driver-bg-${driver.mood}`}
+          aria-hidden="true"
+        >
+          <img src={driver.src} alt="" />
+        </div>
+      ) : null}
       {isDesktop ? (
         <div className={`game-driver game-driver-${driver.mood}`} aria-hidden="true">
           <img src={driver.src} alt="" />
