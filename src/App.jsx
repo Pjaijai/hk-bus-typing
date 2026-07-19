@@ -3,6 +3,7 @@ import { Languages, Moon, Sun } from "lucide-react";
 import { HomeScreen } from "./components/HomeScreen";
 import { GameScreen } from "./components/GameScreen";
 import { ResultScreen } from "./components/ResultScreen";
+import { ChallengeLanding } from "./components/ChallengeLanding";
 import { buildMapModel } from "./lib/map";
 import { getLineRuns, getPlayableStations, getRunLabel } from "./lib/data";
 import {
@@ -26,6 +27,12 @@ import {
   setMuted,
 } from "./lib/audio";
 import { trackEvent } from "./lib/analytics";
+import {
+  buildChallengeUrl,
+  compareResults,
+  parseChallengeHash,
+} from "./lib/challenge";
+import { loadPlayableRoute, loadRouteIndex } from "./lib/routeLoader";
 
 const safeStorage = () =>
   typeof localStorage === "undefined" ? null : localStorage;
@@ -85,6 +92,13 @@ export default function App() {
   const [runIndex, setRunIndex] = useState(0);
   const [mode, setMode] = useState("timed");
   const [typingLanguage, setTypingLanguage] = useState(TYPING_LANGUAGES.ENGLISH);
+  // A decoded #vs/ challenge link, or null outside that flow.
+  const [challenge, setChallenge] = useState(null);
+  const [challengeRouteError, setChallengeRouteError] = useState(null);
+  // In-memory only. One field covers both roles — a session is either the
+  // challenger naming themself while sharing, or the receiver naming
+  // themself before their run — never both at once.
+  const [playerName, setPlayerName] = useState("");
   const [dark, setDark] = useState(
     () => window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false,
   );
@@ -101,6 +115,8 @@ export default function App() {
   const [typedIndex, setTypedIndex] = useState(0);
   const [correct, setCorrect] = useState(0);
   const [errors, setErrors] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [bestStreak, setBestStreak] = useState(0);
   const [completed, setCompleted] = useState(0);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [shake, setShake] = useState(false);
@@ -157,14 +173,6 @@ export default function App() {
     document.body.classList.toggle("dark", dark);
   }, [dark]);
 
-  // Deep link: #r/<route-id> preselects a featured route on load.
-  useEffect(() => {
-    if (!data) return;
-    const match = window.location.hash.match(/^#r\/(.+)$/);
-    const route = match && data.routes.find((r) => r.id === match[1]);
-    if (route) setSelectedRouteId(route.id);
-  }, [data]);
-
   useEffect(() => {
     document.documentElement.lang = locale === UI_LOCALES.ZH ? "zh-Hant" : "en";
   }, [locale]);
@@ -193,16 +201,61 @@ export default function App() {
   }, []);
 
   // Search-all hands over a freshly normalized route object; register it
-  // and select it in one step.
-  const addLoadedRoute = useCallback((route) => {
+  // and select it in one step. runIndex defaults to 0 for a fresh pick,
+  // but a challenge link needs to land on the specific direction the
+  // challenger played.
+  const addLoadedRoute = useCallback((route, runIndex = 0) => {
     setExtraRoutes((current) =>
       current.some((existing) => existing.id === route.id)
         ? current
         : [...current, route],
     );
     setSelectedRouteId(route.id);
-    setRunIndex(0);
+    setRunIndex(runIndex);
   }, []);
+
+  // Non-featured routes (only reachable today via search-all) need the
+  // same runtime resolution SearchBox already uses. Pulled out of the
+  // deep-link effect so the challenge-landing retry button can call it too.
+  const resolveChallengeRoute = useCallback(
+    (parsed) => {
+      setChallengeRouteError(null);
+      loadRouteIndex()
+        .then((index) => {
+          const entry = index.find((e) => e.id === parsed.routeId);
+          if (!entry) throw new Error("route not found in index");
+          return loadPlayableRoute(entry);
+        })
+        .then((route) => addLoadedRoute(route, parsed.runIndex))
+        .catch((error) => setChallengeRouteError(error));
+    },
+    [addLoadedRoute],
+  );
+
+  // Deep links: #vs/<payload> is a challenge (checked first, since it's
+  // the more specific prefix); #r/<route-id> preselects a featured route.
+  // The two coexist because the prefixes are disjoint.
+  useEffect(() => {
+    if (!data) return;
+    const parsed = parseChallengeHash(window.location.hash);
+    if (parsed) {
+      setChallenge(parsed);
+      setMode(parsed.mode);
+      setTypingLanguage(parsed.typingLanguage);
+      setScreen("challenge");
+      const featured = data.routes.find((r) => r.id === parsed.routeId);
+      if (featured) {
+        setSelectedRouteId(featured.id);
+        setRunIndex(parsed.runIndex);
+        return;
+      }
+      resolveChallengeRoute(parsed);
+      return;
+    }
+    const match = window.location.hash.match(/^#r\/(.+)$/);
+    const route = match && data.routes.find((r) => r.id === match[1]);
+    if (route) setSelectedRouteId(route.id);
+  }, [data, resolveChallengeRoute]);
 
   const clearRoute = useCallback(() => {
     setSelectedRouteId(null);
@@ -223,6 +276,8 @@ export default function App() {
     setTypedIndex(0);
     setCorrect(0);
     setErrors(0);
+    setStreak(0);
+    setBestStreak(0);
     setCompleted(0);
     setElapsedMs(0);
     setStopPenalty(0);
@@ -244,6 +299,8 @@ export default function App() {
     gameActiveRef.current = false;
     resetTypingInput();
     typingInputRef.current?.blur();
+    setChallenge(null);
+    setChallengeRouteError(null);
     setScreen("home");
   }, [resetTypingInput]);
 
@@ -308,7 +365,10 @@ export default function App() {
     const to = runModel?.stops[currentIndex];
     if (from && to) traveledMetersRef.current += to.meters - from.meters;
     setStopPenalty(0);
-    if (mode === "line" && currentIndex >= stations.length - 1) {
+    if (
+      (mode === "line" || mode === "express") &&
+      currentIndex >= stations.length - 1
+    ) {
       finishGame();
       return;
     }
@@ -330,19 +390,27 @@ export default function App() {
       if (isTypingCharacterMatch(character, expected, typingLanguage)) {
         typedIndexRef.current += 1;
         setCorrect((value) => value + 1);
+        setStreak((value) => {
+          const next = value + 1;
+          setBestStreak((best) => Math.max(best, next));
+          return next;
+        });
         playKeystroke();
         if (typedIndexRef.current >= targetCharacters.length) advanceStation();
         else setTypedIndex(typedIndexRef.current);
       } else {
         setErrors((value) => value + 1);
         setStopPenalty((value) => value + 1);
+        setStreak(0);
         playError();
         setShake(false);
         requestAnimationFrame(() => setShake(true));
         setTimeout(() => setShake(false), 180);
+        // Express mode is permadeath: any mistake ends the run right here.
+        if (mode === "express") finishGame();
       }
     },
-    [advanceStation, stations, typingLanguage],
+    [advanceStation, finishGame, mode, stations, typingLanguage],
   );
 
   const consumeTypingInput = useCallback(
@@ -397,7 +465,8 @@ export default function App() {
         tag === "SELECT" || tag === "INPUT" || tag === "TEXTAREA";
       const onControl = inFormField || Boolean(event.target.closest?.("button, a"));
       if (event.key === "Escape") {
-        if (screen === "game" || screen === "result") backToHome();
+        if (screen === "game" || screen === "result" || screen === "challenge")
+          backToHome();
         else if (screen === "home" && selectedRouteId) clearRoute();
         else if (screen === "home") event.target.blur?.();
         return;
@@ -428,7 +497,9 @@ export default function App() {
         if (key === "d") {
           if (runs.length > 1) selectRun((runIndex + 1) % runs.length);
         } else if (key === "m") {
-          setMode((value) => (value === "timed" ? "line" : "timed"));
+          setMode((value) =>
+            value === "timed" ? "line" : value === "line" ? "express" : "timed",
+          );
         } else if (key === "t") {
           setTypingLanguage((value) =>
             value === TYPING_LANGUAGES.ENGLISH
@@ -587,6 +658,20 @@ export default function App() {
             onStart={startGame}
           />
         ) : null}
+        {mapModel && screen === "challenge" ? (
+          <ChallengeLanding
+            t={t}
+            locale={locale}
+            challenge={challenge}
+            resolvedRoute={selectedRoute}
+            loadError={challengeRouteError}
+            name={playerName}
+            onNameChange={setPlayerName}
+            onStart={startGame}
+            onRetryLoad={() => resolveChallengeRoute(challenge)}
+            onSkip={backToHome}
+          />
+        ) : null}
         {mapModel && screen === "game" && selectedRoute && stations.length ? (
           <GameScreen
             t={t}
@@ -597,6 +682,7 @@ export default function App() {
             runLabel={runLabel}
             busLength={busLength}
             speedKmh={speedKmh}
+            streak={streak}
             stations={stations}
             mode={mode}
             stationIndex={stationIndex}
@@ -620,13 +706,40 @@ export default function App() {
         {screen === "result" ? (
           <ResultScreen
             t={t}
+            mode={mode}
             elapsed={elapsed}
             completed={completed}
             totalStops={stations.length}
             metrics={metrics}
+            bestStreak={bestStreak}
             lineColor={selectedRoute?.color}
             onRetry={startGame}
             onBack={backToHome}
+            opponent={challenge}
+            playerName={playerName}
+            onNameChange={setPlayerName}
+            onShare={() =>
+              buildChallengeUrl({
+                routeId: selectedRouteId,
+                runIndex,
+                mode,
+                typingLanguage,
+                name: playerName,
+                speed: metrics.speed,
+                speedUnit: metrics.speedUnit,
+                accuracy: metrics.accuracy,
+                completed,
+                elapsedSeconds: elapsed,
+              })
+            }
+            winner={
+              challenge
+                ? compareResults(
+                    { speed: metrics.speed, accuracy: metrics.accuracy },
+                    { speed: challenge.speed, accuracy: challenge.accuracy },
+                  )
+                : null
+            }
           />
         ) : null}
       </main>

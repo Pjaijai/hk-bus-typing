@@ -292,6 +292,13 @@ export function HomeScreen({
                   >
                     {t("modeLine")}
                   </button>
+                  <button
+                    type="button"
+                    className={`option-button${mode === "express" ? " active" : ""}`}
+                    onClick={() => onModeChange("express")}
+                  >
+                    {t("modeExpress")}
+                  </button>
                 </div>
               </div>
               {typingLanguageGroup}
