@@ -55,7 +55,7 @@ describe("buildRouteIndex", () => {
   const index = buildRouteIndex(routeList);
 
   it("pairs outbound and inbound into one entry", () => {
-    expect(index).toHaveLength(1);
+    expect(index).toHaveLength(2);
     expect(Object.keys(index[0].bounds).sort()).toEqual(["I", "O"]);
   });
 
@@ -63,8 +63,8 @@ describe("buildRouteIndex", () => {
     expect(index[0].serviceType).toBe("1");
   });
 
-  it("excludes non-franchised operators", () => {
-    expect(index.find((route) => route.route === "88")).toBeUndefined();
+  it("includes minibus and other non-franchised operators", () => {
+    expect(index.find((route) => route.route === "88")).toBeDefined();
   });
 
   it("cleans terminus names", () => {
@@ -99,6 +99,34 @@ describe("pairBounds", () => {
       },
     ];
     const pairs = pairBounds(nlb);
+    expect(pairs).toHaveLength(1);
+    expect(Object.keys(pairs[0].entries).sort()).toEqual(["I", "O"]);
+  });
+
+  it("maps MTR down/up track bounds onto O and I", () => {
+    const mtr = [
+      {
+        key: "TML+1+A+B",
+        entry: entry({
+          route: "TML",
+          co: ["mtr"],
+          bound: { mtr: "DT" },
+          gtfsId: null,
+          stops: { mtr: ["S1", "S2", "S3"] },
+        }),
+      },
+      {
+        key: "TML+1+B+A",
+        entry: entry({
+          route: "TML",
+          co: ["mtr"],
+          bound: { mtr: "UT" },
+          gtfsId: null,
+          stops: { mtr: ["S3", "S2", "S1"] },
+        }),
+      },
+    ];
+    const pairs = pairBounds(mtr);
     expect(pairs).toHaveLength(1);
     expect(Object.keys(pairs[0].entries).sort()).toEqual(["I", "O"]);
   });

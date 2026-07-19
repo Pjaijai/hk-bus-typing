@@ -10,18 +10,44 @@ import {
   simplifyLine,
 } from "./busGeometry.js";
 
-export const OPERATORS = ["kmb", "ctb", "nlb"];
+// kmb/ctb/nlb stay first so joint ctb+kmb routes resolve to KMB as primary.
+export const OPERATORS = [
+  "kmb",
+  "ctb",
+  "nlb",
+  "gmb",
+  "lrtfeeder",
+  "lightRail",
+  "mtr",
+  "sunferry",
+  "fortuneferry",
+  "hkkf",
+];
 
 export const OPERATOR_COLORS = {
   kmb: "#D71920",
   ctb: "#FDB913",
   nlb: "#00934B",
+  gmb: "#37B34A",
+  lrtfeeder: "#178F7D",
+  lightRail: "#7B4FA0",
+  mtr: "#E2231A",
+  sunferry: "#0075C2",
+  fortuneferry: "#F08300",
+  hkkf: "#0AA3B5",
 };
 
 export const OPERATOR_NAMES = {
   kmb: { en: "KMB", zh: "九巴" },
   ctb: { en: "Citybus", zh: "城巴" },
   nlb: { en: "NLB", zh: "嶼巴" },
+  gmb: { en: "Minibus", zh: "專線小巴" },
+  lrtfeeder: { en: "MTR Bus", zh: "港鐵巴士" },
+  lightRail: { en: "Light Rail", zh: "輕鐵" },
+  mtr: { en: "MTR", zh: "港鐵" },
+  sunferry: { en: "Sun Ferry", zh: "新渡輪" },
+  fortuneferry: { en: "Fortune Ferry", zh: "富裕小輪" },
+  hkkf: { en: "HKKF", zh: "港九小輪" },
 };
 
 // ~11 m at Hong Kong's latitude; waypoints ship 5-decimal coordinates.
@@ -65,6 +91,17 @@ export function routeTextColor(co) {
 
 function serviceKey(serviceType) {
   return String(serviceType);
+}
+
+// MTR carries "DT"/"UT" (down/up track) plus branch variants like "LMC-DT";
+// map those onto the outbound/inbound slots the pairing logic expects. Bus
+// "O"/"I" pass through, and combined "OI"/"IO" fall through to be handled as a
+// single run downstream.
+function normalizeBound(raw) {
+  if (raw === "O" || raw === "I") return raw;
+  if (typeof raw === "string" && raw.endsWith("UT")) return "I";
+  if (typeof raw === "string" && raw.endsWith("DT")) return "O";
+  return raw;
 }
 
 function looksReversed(a, b) {
@@ -123,7 +160,7 @@ export function pairBounds(entries) {
         combined: [],
       });
     const group = groups.get(groupKey);
-    const bound = entry.bound?.[operator] ?? "O";
+    const bound = normalizeBound(entry.bound?.[operator] ?? "O");
     if (bound === "O" || bound === "I") {
       if (!group.entries[bound]) group.entries[bound] = { key, entry };
       // NLB marks both directions "O"; the swapped-termini twin is inbound.
