@@ -5,38 +5,43 @@
       <stop offset="1" stop-color="#121419"/>
     </linearGradient>
     <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#f7f9fb"/>
-      <stop offset="0.55" stop-color="#c3c9d1"/>
-      <stop offset="1" stop-color="#878e98"/>
+      <stop offset="0" stop-color="#e83a40"/>
+      <stop offset="0.5" stop-color="#d71920"/>
+      <stop offset="1" stop-color="#a91218"/>
     </linearGradient>
     <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#4d5966"/>
       <stop offset="1" stop-color="#1b2128"/>
     </linearGradient>
     <clipPath id="bodyClip">
-      <rect x="13" y="9" width="38" height="42" rx="11"/>
+      <rect x="13" y="7" width="38" height="46" rx="8"/>
     </clipPath>
   </defs>
 
   <rect width="64" height="64" rx="14" fill="url(#bg)"/>
 
-  <!-- rails -->
-  <rect x="20" y="54" width="3" height="6" rx="1.5" fill="#3c434e"/>
-  <rect x="41" y="54" width="3" height="6" rx="1.5" fill="#3c434e"/>
-
-  <!-- train front -->
-  <rect x="13" y="9" width="38" height="42" rx="11" fill="url(#body)"/>
+  <!-- double-decker front -->
+  <rect x="13" y="7" width="38" height="46" rx="8" fill="url(#body)"/>
   <g clip-path="url(#bodyClip)">
-    <rect x="13" y="31.5" width="38" height="6.5" fill="#e60012"/>
-    <rect x="13" y="46.5" width="38" height="4.5" fill="#5b6470"/>
+    <!-- destination display -->
+    <rect x="17" y="10" width="30" height="7" rx="2" fill="#15181d"/>
+    <rect x="19.5" y="12" width="12" height="3" rx="1.5" fill="#ffb400"/>
+    <!-- upper deck window -->
+    <rect x="17" y="19.5" width="30" height="10" rx="3.5" fill="url(#glass)"/>
+    <rect x="18.8" y="20.8" width="26.4" height="2.6" rx="1.3" fill="rgba(255,255,255,0.26)"/>
+    <!-- lower deck windscreen -->
+    <rect x="17" y="32.5" width="30" height="11.5" rx="3.5" fill="url(#glass)"/>
+    <rect x="18.8" y="33.8" width="26.4" height="2.8" rx="1.4" fill="rgba(255,255,255,0.22)"/>
+    <!-- bumper -->
+    <rect x="13" y="47.5" width="38" height="5.5" fill="#5b6470"/>
   </g>
-  <rect x="13.6" y="9.6" width="36.8" height="40.8" rx="10.4" fill="none" stroke="rgba(15,19,25,0.45)" stroke-width="1.2"/>
-
-  <!-- windscreen -->
-  <rect x="18" y="14" width="28" height="13.5" rx="6" fill="url(#glass)"/>
-  <rect x="20" y="15.5" width="24" height="3.2" rx="1.6" fill="rgba(255,255,255,0.28)"/>
+  <rect x="13.6" y="7.6" width="36.8" height="44.8" rx="7.4" fill="none" stroke="rgba(15,19,25,0.45)" stroke-width="1.2"/>
 
   <!-- headlights -->
-  <circle cx="21.5" cy="43" r="3.1" fill="#ffedb0" stroke="rgba(15,19,25,0.4)" stroke-width="0.9"/>
-  <circle cx="42.5" cy="43" r="3.1" fill="#ffedb0" stroke="rgba(15,19,25,0.4)" stroke-width="0.9"/>
+  <circle cx="20.5" cy="46" r="2.6" fill="#ffedb0" stroke="rgba(15,19,25,0.4)" stroke-width="0.9"/>
+  <circle cx="43.5" cy="46" r="2.6" fill="#ffedb0" stroke="rgba(15,19,25,0.4)" stroke-width="0.9"/>
+
+  <!-- wheels -->
+  <rect x="19" y="53" width="7" height="7" rx="3.5" fill="#3c434e"/>
+  <rect x="38" y="53" width="7" height="7" rx="3.5" fill="#3c434e"/>
 </svg>
