@@ -622,6 +622,7 @@ export default function App() {
             t={t}
             elapsed={elapsed}
             completed={completed}
+            totalStops={stations.length}
             metrics={metrics}
             lineColor={selectedRoute?.color}
             onRetry={startGame}

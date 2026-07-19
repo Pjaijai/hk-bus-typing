@@ -4,16 +4,25 @@ export function ResultScreen({
   t,
   elapsed,
   completed,
+  totalStops,
   metrics,
   lineColor,
   onRetry,
   onBack,
 }) {
+  // Full route → terminus; some progress → a pat on the back; never left
+  // the first stop → questions about the driver's licence.
+  const title =
+    totalStops && completed >= totalStops
+      ? t("resultTitle")
+      : completed > 0
+        ? t("resultTitleProgress")
+        : t("resultTitleZero");
   return (
     <section className="result" style={{ "--line-color": lineColor ?? "#E60012" }}>
       <div className="result-card">
         <BusFront size={34} aria-hidden="true" />
-        <h1>{t("resultTitle")}</h1>
+        <h1>{title}</h1>
         <div className="result-stats">
           <div>
             <small>{metrics.speedUnit}</small>
