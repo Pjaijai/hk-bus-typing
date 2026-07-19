@@ -33,8 +33,29 @@ export function primaryOperator(co) {
   return OPERATORS.find((operator) => co.includes(operator)) ?? co[0];
 }
 
-export function routeColor(co) {
-  return OPERATOR_COLORS[primaryOperator(co)] ?? "#888888";
+// Deterministic per-route lightness shift so a dozen routes of one
+// operator stay tellable apart where their corridors overlap. The brand
+// hue survives; only the shade moves (±~14%).
+function shiftShade(hex, amount) {
+  const channels = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const towards = amount >= 0 ? 255 : 0;
+  const mix = Math.abs(amount);
+  return `#${channels
+    .map((value) =>
+      Math.round(value + (towards - value) * mix)
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
+}
+
+export function routeColor(co, route = "") {
+  const base = OPERATOR_COLORS[primaryOperator(co)] ?? "#888888";
+  if (!route) return base;
+  let hash = 0;
+  for (const character of route)
+    hash = (hash * 31 + character.charCodeAt(0)) % 997;
+  return shiftShade(base, ((hash % 15) - 7) * 0.02);
 }
 
 // Citybus yellow needs dark text; the other operator colours carry white.
@@ -305,7 +326,7 @@ export function normalizeRoute({ pair, stopList, waypointsByDir = {} }) {
     code: pair.route,
     nameEn: pair.route,
     nameZh: pair.route,
-    color: routeColor(pair.co),
+    color: routeColor(pair.co, pair.route),
     stations: [...stationsById.values()],
     segments,
     runsMeta,

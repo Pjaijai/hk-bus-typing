@@ -73,7 +73,7 @@ export function HKMap({
 
   return (
     <svg
-      className={`hk-map ${className}`}
+      className={`hk-map ${className}${hasSelection ? "" : " overview"}`}
       viewBox={`${x} ${y} ${width} ${height}`}
       role="img"
       aria-label="Hong Kong bus route map"
