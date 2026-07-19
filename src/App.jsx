@@ -290,7 +290,7 @@ export default function App() {
     const span = last.ms - first.ms;
     if (span < 500) return;
     const target = Math.min(
-      150,
+      200,
       Math.max(0, (last.m - first.m) / 1000 / (span / 3600000)),
     );
     // Asymmetric needle: earns speed slowly, loses it fast.

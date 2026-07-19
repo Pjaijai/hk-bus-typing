@@ -294,6 +294,32 @@ footer a {
   }
 }
 
+/* Past 150 km/h everything runs hotter: the readout burns red and
+   trembles, the streaks double up and flicker twice as fast. */
+.game-speed.overspeed-max strong {
+  color: #ff2d1a;
+}
+
+.game-speed.overspeed-max {
+  animation:
+    overspeed-pulse 0.35s ease-in-out infinite,
+    overspeed-tremble 0.12s linear infinite;
+}
+
+@keyframes overspeed-tremble {
+  25% {
+    transform: translate(0.6px, -0.4px);
+  }
+  75% {
+    transform: translate(-0.6px, 0.4px);
+  }
+}
+
+.bus-streaks.max line {
+  stroke-width: 1.5;
+  animation-duration: 0.15s;
+}
+
 /* The overview mesh stays translucent so overlapping corridors read as
    layers instead of a solid blob; hovering (via the fat hit path) lifts
    one route out of it. */

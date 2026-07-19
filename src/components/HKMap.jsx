@@ -45,7 +45,7 @@ export function HKMap({
   completedCount = 0,
   busLength = null,
   busShake = false,
-  busSpeeding = false,
+  busSpeeding = 0,
   initialViewBox = null,
   className = "",
 }) {
@@ -160,10 +160,21 @@ function BusMarker({ x, y, angle, scale, color, shake, speeding }) {
           transform instead of fighting it. */}
       <g className={`hk-train-body${shake ? " shake" : ""}`}>
         {speeding ? (
-          <g className="bus-streaks" stroke="rgba(255,255,255,0.8)" strokeWidth="1.1">
+          <g
+            className={`bus-streaks${speeding >= 2 ? " max" : ""}`}
+            stroke="rgba(255,255,255,0.8)"
+            strokeWidth="1.1"
+          >
             <line x1="-13.5" y1="-3.2" x2="-22" y2="-3.2" />
             <line x1="-14.5" y1="0" x2="-26" y2="0" />
             <line x1="-13.5" y1="3.2" x2="-22" y2="3.2" />
+            {speeding >= 2 ? (
+              <>
+                <line x1="-16" y1="-5.2" x2="-30" y2="-5.2" />
+                <line x1="-17" y1="1.6" x2="-32" y2="1.6" />
+                <line x1="-16" y1="5.2" x2="-30" y2="5.2" />
+              </>
+            ) : null}
           </g>
         ) : null}
         <defs>
