@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { BusFront } from "lucide-react";
+import { BusFront, Rewind } from "lucide-react";
 import { routeTextColor } from "../lib/busNormalize";
+import { JourneyReplay } from "./JourneyReplay";
 
 export function ResultScreen({
   t,
@@ -15,6 +16,9 @@ export function ResultScreen({
   routeCode,
   routeCo,
   runLabel,
+  mapModel,
+  mapRoute,
+  activeRun,
   onRetry,
   onBack,
   opponent,
@@ -24,6 +28,8 @@ export function ResultScreen({
   winner,
 }) {
   const [shareState, setShareState] = useState("idle");
+  const [showReplay, setShowReplay] = useState(false);
+  const canRewind = Boolean(mapModel && mapRoute && activeRun);
 
   const modeLabel =
     mode === "express"
@@ -159,12 +165,32 @@ export function ResultScreen({
           <button type="button" className="start-button" onClick={onRetry}>
             {opponent ? t("challengeRematch") : t("retry")}
           </button>
+          {canRewind ? (
+            <button
+              type="button"
+              className="ghost-button"
+              onClick={() => setShowReplay(true)}
+            >
+              <Rewind size={16} aria-hidden="true" />
+              {t("rewindJourney")}
+            </button>
+          ) : null}
           <button type="button" className="ghost-button" onClick={onBack}>
             {t("backHome")}
           </button>
         </div>
         <p className="start-hint">{t("resultHint")}</p>
       </div>
+      {showReplay ? (
+        <JourneyReplay
+          t={t}
+          mapModel={mapModel}
+          route={mapRoute}
+          activeRun={activeRun}
+          runLabel={runLabel}
+          onClose={() => setShowReplay(false)}
+        />
+      ) : null}
     </section>
   );
 }
