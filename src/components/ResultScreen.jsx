@@ -133,28 +133,14 @@ export function ResultScreen({
         )}
 
         <div className="result-actions">
-          {opponent ? (
-            <button type="button" className="start-button" onClick={copyLink}>
-              {t("challengeRematch")}
-            </button>
-          ) : (
-            <button type="button" className="start-button" onClick={onRetry}>
-              {t("retry")}
-            </button>
-          )}
+          <button type="button" className="start-button" onClick={onRetry}>
+            {opponent ? t("challengeRematch") : t("retry")}
+          </button>
           <button type="button" className="ghost-button" onClick={onBack}>
             {t("backHome")}
           </button>
         </div>
-        {opponent && shareState === "copied" ? (
-          <p className="share-feedback">{t("challengeLinkCopied")}</p>
-        ) : null}
-        {opponent && shareState === "error" ? (
-          <p className="share-feedback">{t("challengeLinkCopyFailed")}</p>
-        ) : null}
-        <p className="start-hint">
-          {opponent ? t("challengeResultHint") : t("resultHint")}
-        </p>
+        <p className="start-hint">{t("resultHint")}</p>
       </div>
     </section>
   );

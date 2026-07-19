@@ -481,7 +481,7 @@ export default function App() {
         return;
       }
       if (screen === "result") {
-        if (event.key === "Enter" && !onControl && !challenge) startGame();
+        if (event.key === "Enter" && !onControl) startGame();
         return;
       }
       if (screen === "home") {
@@ -540,7 +540,6 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [
     backToHome,
-    challenge,
     clearRoute,
     data,
     runIndex,
