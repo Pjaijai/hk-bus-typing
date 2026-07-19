@@ -152,10 +152,9 @@ export default function App() {
     [selectedRoute, runIndex],
   );
   const runs = useMemo(() => getLineRuns(selectedRoute), [selectedRoute]);
-  const runModel =
-    mapModel?.routes.find((route) => route.id === selectedRouteId)?.runs[
-      runIndex
-    ] ?? null;
+  const mapRoute =
+    mapModel?.routes.find((route) => route.id === selectedRouteId) ?? null;
+  const runModel = mapRoute?.runs[runIndex] ?? null;
   const runLabel = getRunLabel(runs[runIndex] ?? runs[0], locale === UI_LOCALES.ZH);
 
   const attempts = correct + errors;
@@ -727,6 +726,9 @@ export default function App() {
             routeCode={selectedRoute?.code}
             routeCo={selectedRoute?.co}
             runLabel={runLabel}
+            mapModel={mapModel}
+            mapRoute={mapRoute}
+            activeRun={runModel}
             onRetry={startGame}
             onBack={backToHome}
             opponent={challenge}
