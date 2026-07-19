@@ -762,8 +762,10 @@ footer a {
 }
 
 .start-button:disabled {
-  opacity: 0.45;
+  background: var(--line);
+  color: var(--ink-soft);
   cursor: not-allowed;
+  box-shadow: none;
   filter: none;
 }
 
