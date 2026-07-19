@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mtr-typing.paulwong.dev/sitemap.xml

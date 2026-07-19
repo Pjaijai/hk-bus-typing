@@ -1,0 +1,1014 @@
+:root {
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --ink: #1c1e21;
+  --ink-soft: #5f6570;
+  --line: #e3e5e9;
+  --sea: #dfe8f0;
+  --land: #f8f6f1;
+  --land-stroke: #cfd6dd;
+  --accent: #e60012;
+  --shadow: 0 10px 30px rgba(20, 24, 33, 0.08);
+  color-scheme: light;
+}
+
+body.dark {
+  --bg: #14161a;
+  --surface: #1d2026;
+  --ink: #f0f2f5;
+  --ink-soft: #9aa1ac;
+  --line: #2c3038;
+  --sea: #10151c;
+  --land: #232830;
+  --land-stroke: #3a414c;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family:
+    "Helvetica Neue",
+    Arial,
+    "PingFang HK",
+    "PingFang TC",
+    "Microsoft JhengHei",
+    sans-serif;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+button:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.app-shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+  width: min(1080px, 100%);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Hidden input that receives IME/mobile keystrokes. */
+.hidden-typing-input {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  border: none;
+  padding: 0;
+}
+
+/* ---------- chrome ---------- */
+
+.topbar {
+  width: min(1080px, 100%);
+  margin: 0 auto;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  font-size: 15px;
+}
+
+.brand-mark {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.top-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+footer {
+  width: min(1080px, 100%);
+  margin: 40px auto 0;
+  padding: 22px 20px 30px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: space-between;
+  color: var(--ink-soft);
+  font-size: 12.5px;
+}
+
+.footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.footer-wordmark {
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--ink);
+}
+
+.footer-lines {
+  display: flex;
+  gap: 4px;
+}
+
+.footer-lines i {
+  width: 16px;
+  height: 5px;
+  border-radius: 3px;
+}
+
+.footer-meta {
+  text-align: right;
+}
+
+.footer-meta p {
+  margin: 4px 0;
+}
+
+.footer-label {
+  font-weight: 700;
+  margin-right: 6px;
+  letter-spacing: 0.06em;
+}
+
+.footer-sep {
+  margin: 0 6px;
+}
+
+footer a {
+  color: inherit;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  padding: 80px 0;
+  color: var(--ink-soft);
+}
+
+.loading span {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 3px solid var(--line);
+  border-top-color: var(--accent);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.data-error {
+  margin: 60px auto;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.data-error button {
+  align-self: center;
+  padding: 8px 18px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ---------- map ---------- */
+
+.hk-map {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: var(--sea);
+}
+
+.hk-land {
+  fill: var(--land);
+  stroke: var(--land-stroke);
+}
+
+.hk-route polyline {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: opacity 0.25s ease;
+}
+
+.hk-route.dimmed polyline {
+  opacity: 0.18;
+}
+
+.hk-route-hit {
+  stroke: transparent;
+  stroke-width: 14;
+  cursor: pointer;
+  pointer-events: stroke;
+}
+
+.hk-station {
+  fill: var(--surface);
+  stroke: var(--line-color, var(--accent));
+}
+
+.hk-station.done {
+  fill: var(--line-color, var(--accent));
+}
+
+.hk-train {
+  transition: transform 0.6s cubic-bezier(0.35, 0.85, 0.35, 1);
+  pointer-events: none;
+}
+
+.hk-train-body {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.hk-train-body.shake {
+  animation: train-shake 0.18s ease;
+}
+
+@keyframes train-shake {
+  25% {
+    transform: translateY(-1.6px) rotate(-5deg);
+  }
+  75% {
+    transform: translateY(1.6px) rotate(5deg);
+  }
+}
+
+/* ---------- landing ---------- */
+
+.landing {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+}
+
+.landing-map {
+  position: absolute;
+  inset: 0;
+}
+
+.topbar.floating {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  width: 100%;
+}
+
+.landing-credits {
+  position: absolute;
+  right: 12px;
+  bottom: 6px;
+  z-index: 5;
+  margin: 0;
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+.landing-credits a {
+  color: inherit;
+}
+
+.island {
+  position: absolute;
+  left: 50%;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 10;
+  width: min(880px, calc(100% - 28px));
+  max-height: 66dvh;
+  overflow-y: auto;
+  padding: 18px 22px;
+  border-radius: 22px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  box-shadow: 0 18px 44px rgba(15, 18, 26, 0.22);
+}
+
+.island-handle {
+  display: none;
+}
+
+.island-title h1 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: 0.05em;
+}
+
+.island-title p {
+  margin: 3px 0 12px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.line-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.line-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px 7px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 650;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+
+.line-pill:hover {
+  transform: translateY(-2px);
+  border-color: var(--line-color);
+}
+
+.island-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.island-head .back-button {
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.island-head .line-names {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.island-head .line-names strong {
+  font-size: 17px;
+}
+
+.island-head .line-names small {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.island-head .start-button {
+  padding: 10px 18px;
+  font-size: 14px;
+}
+
+.island-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px 22px;
+  margin-top: 14px;
+}
+
+.island-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.island-label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.island .option-button,
+.island .direction-button {
+  padding: 7px 11px;
+  font-size: 12.5px;
+  border-radius: 10px;
+}
+
+.island .start-hint {
+  margin-top: 12px;
+}
+
+.station-select {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: inherit;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  min-width: 170px;
+}
+
+.start-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: none;
+}
+
+.line-chip {
+  min-width: 40px;
+  padding: 5px 7px;
+  border-radius: 8px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 12px;
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+
+.line-chip.large {
+  min-width: 52px;
+  font-size: 15px;
+  padding: 9px 8px;
+}
+
+.line-names {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.line-names small {
+  color: var(--ink-soft);
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  align-self: flex-start;
+}
+
+.back-button:hover {
+  color: var(--ink);
+}
+
+.option-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.option-button,
+.direction-button {
+  padding: 9px 14px;
+  border-radius: 11px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-size: 13.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.option-button.active {
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+.start-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 20px;
+  border-radius: 13px;
+  background: var(--line-color, var(--accent));
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: var(--shadow);
+  transition: filter 0.12s ease;
+}
+
+.start-button:hover {
+  filter: brightness(1.08);
+}
+
+.start-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+.ghost-button {
+  padding: 12px 18px;
+  border-radius: 13px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-weight: 700;
+}
+
+/* ---------- game ---------- */
+
+.game {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+}
+
+.game-map-bg {
+  position: absolute;
+  inset: 0;
+}
+
+.game-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+}
+
+.game-top-right {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.game-top .back-button,
+.game-top .sound-button,
+.game-line,
+.game-timer {
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 8px 12px;
+}
+
+.game-line {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+}
+
+.game-timer {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 88px;
+  justify-content: flex-end;
+}
+
+.game-timer small {
+  color: var(--ink-soft);
+  font-size: 11px;
+}
+
+.game-timer strong {
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+}
+
+.game-island {
+  width: min(760px, calc(100% - 28px));
+  border-top: 4px solid var(--line-color, var(--accent));
+}
+
+.typing-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-top: 14px;
+}
+
+.typing-panel.shake {
+  animation: shake 0.18s ease;
+}
+
+@keyframes shake {
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+.station-names {
+  text-align: center;
+}
+
+.station-names small {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+}
+
+.station-names h2 {
+  margin: 4px 0 0;
+  font-size: 28px;
+}
+
+.station-names p {
+  margin: 2px 0 0;
+  color: var(--ink-soft);
+  font-size: 15px;
+}
+
+.target {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1px;
+  font-size: 26px;
+  font-weight: 700;
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+}
+
+.target-char {
+  padding: 1px 2px;
+  border-bottom: 3px solid transparent;
+  color: var(--ink-soft);
+  white-space: pre;
+}
+
+.target-char.typed {
+  color: var(--line-color, var(--accent));
+}
+
+.target-char.current {
+  border-bottom-color: var(--line-color, var(--accent));
+  color: var(--ink);
+}
+
+.composition {
+  min-height: 24px;
+  font-size: 17px;
+  color: var(--ink-soft);
+}
+
+.tap-hint {
+  display: none;
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.game-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 12px;
+}
+
+.game-stats > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+}
+
+.game-stats small {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+}
+
+.game-stats strong {
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- result ---------- */
+
+.result {
+  display: flex;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.result-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  border-top: 5px solid var(--line-color);
+  box-shadow: var(--shadow);
+  padding: 34px 38px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  max-width: 480px;
+  width: 100%;
+}
+
+.result-card svg {
+  color: var(--line-color);
+}
+
+.result-card h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.result-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  width: 100%;
+  text-align: center;
+}
+
+.result-stats small {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+  display: block;
+}
+
+.result-stats strong {
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+}
+
+.result-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.result-actions .start-button {
+  padding: 12px 18px;
+  font-size: 15px;
+}
+
+/* ---------- responsive ---------- */
+
+/* Keyboard shortcut hints mean nothing on touch screens. */
+@media (pointer: coarse) {
+  .start-hint {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .island {
+    width: calc(100% - 16px);
+    bottom: max(10px, env(safe-area-inset-bottom));
+    padding: 13px 14px;
+    border-radius: 18px;
+  }
+
+  .island-title h1 {
+    font-size: 17px;
+  }
+
+  .island-title p {
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+
+  .landing-credits {
+    top: max(64px, calc(env(safe-area-inset-top) + 58px));
+    bottom: auto;
+    right: 10px;
+    font-size: 10px;
+  }
+
+  /* Bottom-sheet grabber: collapse the island to keep the map in view. */
+  .island-handle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 0 0 6px;
+    color: var(--ink-soft);
+  }
+
+  .island.collapsed .line-strip,
+  .island.collapsed .island-controls,
+  .island.collapsed .island-title p,
+  .island.collapsed .island-hint {
+    display: none;
+  }
+
+  .island.collapsed .island-title h1 {
+    font-size: 15px;
+  }
+
+  .island.collapsed.game-island .game-stats,
+  .island.collapsed.game-island .station-names {
+    display: none;
+  }
+
+  .island.collapsed.game-island .typing-panel {
+    padding-top: 0;
+  }
+
+  /* Compact in-game layout: stats in one slim row, tighter typing block. */
+  .game-island .game-stats {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding-bottom: 10px;
+  }
+
+  .game-island .game-stats strong {
+    font-size: 15px;
+  }
+
+  .game-island .game-stats small {
+    font-size: 9.5px;
+  }
+
+  .game-island .station-names h2 {
+    font-size: 22px;
+  }
+
+  .game-island .station-names small {
+    font-size: 10px;
+  }
+
+  .game-island .typing-panel {
+    padding-top: 10px;
+    gap: 6px;
+  }
+
+  /* Two-row strip that scrolls sideways, so the map stays the hero. */
+  .line-strip {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(2, auto);
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 4px;
+  }
+
+  .line-pill {
+    white-space: nowrap;
+  }
+
+  .island-head {
+    gap: 8px;
+  }
+
+  .island-head .line-names strong {
+    font-size: 14.5px;
+  }
+
+  .island-head .line-names small {
+    font-size: 11px;
+  }
+
+  .island-head .start-button {
+    padding: 9px 14px;
+    font-size: 13px;
+  }
+
+  .select-group {
+    flex: 1 1 150px;
+    min-width: 0;
+  }
+
+  .station-select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .game-top {
+    padding: 10px 12px;
+  }
+
+  .game-top .back-label {
+    display: none;
+  }
+
+  .game-line strong,
+  .game-timer {
+    white-space: nowrap;
+  }
+
+  .game-line strong {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 820px) {
+  .island {
+    padding: 14px 16px;
+  }
+
+  .island-head .line-names strong {
+    font-size: 15px;
+  }
+
+  .island-controls {
+    gap: 10px 16px;
+  }
+
+  .game-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .result-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .station-names h2 {
+    font-size: 25px;
+  }
+
+  .target {
+    font-size: 21px;
+  }
+
+  .tap-hint {
+    display: block;
+  }
+}
