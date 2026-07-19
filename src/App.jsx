@@ -472,7 +472,7 @@ export default function App() {
         return;
       }
       if (screen === "result") {
-        if (event.key === "Enter" && !onControl) startGame();
+        if (event.key === "Enter" && !onControl && !challenge) startGame();
         return;
       }
       if (screen === "home") {
@@ -531,6 +531,7 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [
     backToHome,
+    challenge,
     clearRoute,
     data,
     runIndex,
@@ -711,6 +712,7 @@ export default function App() {
             completed={completed}
             totalStops={stations.length}
             metrics={metrics}
+            errors={errors}
             bestStreak={bestStreak}
             lineColor={selectedRoute?.color}
             onRetry={startGame}

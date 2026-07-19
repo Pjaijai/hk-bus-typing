@@ -8,6 +8,7 @@ export function ResultScreen({
   completed,
   totalStops,
   metrics,
+  errors,
   bestStreak,
   lineColor,
   onRetry,
@@ -55,6 +56,10 @@ export function ResultScreen({
             <strong>{metrics.accuracy}%</strong>
           </div>
           <div>
+            <small>{t("errors")}</small>
+            <strong>{errors}</strong>
+          </div>
+          <div>
             <small>{t("completedStops")}</small>
             <strong>{completed}</strong>
           </div>
@@ -94,15 +99,6 @@ export function ResultScreen({
                   ? t("challengeWinnerThem")
                   : t("challengeWinnerTie")}
             </p>
-            <button type="button" className="ghost-button" onClick={copyLink}>
-              {t("challengeRematch")}
-            </button>
-            {shareState === "copied" ? (
-              <p className="share-feedback">{t("challengeLinkCopied")}</p>
-            ) : null}
-            {shareState === "error" ? (
-              <p className="share-feedback">{t("challengeLinkCopyFailed")}</p>
-            ) : null}
           </div>
         ) : (
           <div className="share-panel">
@@ -134,14 +130,28 @@ export function ResultScreen({
         )}
 
         <div className="result-actions">
-          <button type="button" className="start-button" onClick={onRetry}>
-            {t("retry")}
-          </button>
+          {opponent ? (
+            <button type="button" className="start-button" onClick={copyLink}>
+              {t("challengeRematch")}
+            </button>
+          ) : (
+            <button type="button" className="start-button" onClick={onRetry}>
+              {t("retry")}
+            </button>
+          )}
           <button type="button" className="ghost-button" onClick={onBack}>
             {t("backHome")}
           </button>
         </div>
-        <p className="start-hint">{t("resultHint")}</p>
+        {opponent && shareState === "copied" ? (
+          <p className="share-feedback">{t("challengeLinkCopied")}</p>
+        ) : null}
+        {opponent && shareState === "error" ? (
+          <p className="share-feedback">{t("challengeLinkCopyFailed")}</p>
+        ) : null}
+        <p className="start-hint">
+          {opponent ? t("challengeResultHint") : t("resultHint")}
+        </p>
       </div>
     </section>
   );
