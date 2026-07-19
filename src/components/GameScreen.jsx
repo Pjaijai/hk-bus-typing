@@ -72,6 +72,15 @@ export function GameScreen({
   const targetCharacters = [...target];
   const [collapsed, setCollapsed] = useState(false);
   const streakTier = streak >= 50 ? 3 : streak >= 25 ? 2 : streak >= 10 ? 1 : 0;
+  // Driver mood tracks the bus speed: chill under 50 km/h, focused up to
+  // 100, nervous once the bus is flying. The image is desktop-only (hidden
+  // on narrow/touch screens via CSS) so it never crowds the phone layout.
+  const driver =
+    speedKmh > 100
+      ? { src: "/driver/driver_nervous.png", mood: "nervous", label: useZh ? "亡命" : "Furious" }
+      : speedKmh > 50
+        ? { src: "/driver/driver_focused.png", mood: "focused", label: useZh ? "專注" : "Cruiser" }
+        : { src: "/driver/driver_chill.png", mood: "chill", label: useZh ? "輕鬆" : "Chill" };
 
   return (
     /* The click handler only refocuses the hidden IME input for phones. */
@@ -95,6 +104,10 @@ export function GameScreen({
           busSpeeding={speedKmh > 150 ? 2 : speedKmh > 100 ? 1 : 0}
           busBoost={busBoost}
         />
+      </div>
+      <div className={`game-driver game-driver-${driver.mood}`} aria-hidden="true">
+        <img src={driver.src} alt="" />
+        <span className="game-driver-label">{driver.label}</span>
       </div>
       <div className="game-top">
         <button
