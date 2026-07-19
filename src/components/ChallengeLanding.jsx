@@ -1,6 +1,6 @@
 import { ChevronLeft, RefreshCw, Trophy } from "lucide-react";
 import { getLineRuns, getRunLabel } from "../lib/data";
-import { routeTextColor } from "../lib/busNormalize";
+import { contrastText } from "../lib/busNormalize";
 import { UI_LOCALES } from "../lib/i18n";
 
 // Read-only landing screen for a #vs/ challenge link: the route, direction,
@@ -76,7 +76,7 @@ export function ChallengeLanding({
             className="line-chip large"
             style={{
               background: resolvedRoute.color,
-              color: routeTextColor(resolvedRoute.co),
+              color: contrastText(resolvedRoute.color),
             }}
           >
             {resolvedRoute.route}

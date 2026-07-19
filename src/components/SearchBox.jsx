@@ -5,7 +5,7 @@ import {
   loadRouteIndex,
   searchRoutes,
 } from "../lib/routeLoader";
-import { routeColor, routeTextColor } from "../lib/busNormalize";
+import { contrastText, routeColor } from "../lib/busNormalize";
 import { UI_LOCALES } from "../lib/i18n";
 
 export function SearchBox({ t, locale, loadedRouteIds, onPick, onRouteLoaded }) {
@@ -97,7 +97,7 @@ export function SearchBox({ t, locale, loadedRouteIds, onPick, onRouteLoaded }) 
                     className="line-chip"
                     style={{
                       background: color,
-                      color: routeTextColor(entry.co),
+                      color: contrastText(color),
                     }}
                   >
                     {entry.route}

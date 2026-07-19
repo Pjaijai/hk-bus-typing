@@ -6,13 +6,15 @@ import { getRouteViewBox, MAP_VIEWBOX } from "../lib/map";
 import { getLineRuns, getPlayableStations, getRunLabel } from "../lib/data";
 import { loadPlayableRoute, loadRouteIndex } from "../lib/routeLoader";
 import {
+  contrastText,
+  mtrLineName,
   OPERATOR_COLORS,
   OPERATOR_NAMES,
   OPERATORS,
   primaryOperator,
   routeColor,
-  routeTextColor,
 } from "../lib/busNormalize";
+import { OperatorIcon } from "../lib/operatorIcons";
 import { TYPING_LANGUAGES } from "../lib/typing";
 import { UI_LOCALES } from "../lib/i18n";
 
@@ -255,6 +257,11 @@ export function HomeScreen({
                     style={{ "--line-color": OPERATOR_COLORS[operator] }}
                     onClick={() => chooseType(operator)}
                   >
+                    <OperatorIcon
+                      operator={operator}
+                      size={15}
+                      aria-hidden="true"
+                    />
                     {operatorName(operator)}
                   </button>
                 ))}
@@ -276,27 +283,35 @@ export function HomeScreen({
                 <p className="search-status">{t("searchNoResults")}</p>
               ) : (
                 <div className="line-strip">
-                  {typeRoutes.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className="line-pill route-pill"
-                      style={{ "--line-color": item.color }}
-                      title={item.title}
-                      disabled={loadingId === item.id}
-                      onClick={() => pickTypeRoute(item)}
-                    >
-                      <span
-                        className="line-chip"
-                        style={{
-                          background: item.color,
-                          color: routeTextColor(item.co),
-                        }}
+                  {typeRoutes.map((item) => {
+                    const lineName = mtrLineName(item.co, item.route, useZh);
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={`line-pill route-pill${
+                          lineName ? " named-pill" : ""
+                        }`}
+                        style={{ "--line-color": item.color }}
+                        title={item.title}
+                        disabled={loadingId === item.id}
+                        onClick={() => pickTypeRoute(item)}
                       >
-                        {item.route}
-                      </span>
-                    </button>
-                  ))}
+                        <span
+                          className="line-chip"
+                          style={{
+                            background: item.color,
+                            color: contrastText(item.color),
+                          }}
+                        >
+                          {item.route}
+                        </span>
+                        {lineName ? (
+                          <span className="line-pill-name">{lineName}</span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
               {failedId ? (
@@ -318,7 +333,7 @@ export function HomeScreen({
               </button>
               <span
                 className="line-chip large"
-                style={{ background: selectedRoute.color, color: routeTextColor(selectedRoute.co) }}
+                style={{ background: selectedRoute.color, color: contrastText(selectedRoute.color) }}
               >
                 {selectedRoute.route}
               </span>
@@ -331,8 +346,14 @@ export function HomeScreen({
                     : selectedRoute.route}
                 </strong>
                 <small>
-                  {operatorName(selectedRoute.operator)} · {playable.length}{" "}
-                  {t("stops")}
+                  <OperatorIcon
+                    operator={selectedRoute.operator}
+                    size={13}
+                    aria-hidden="true"
+                  />
+                  {mtrLineName(selectedRoute.co, selectedRoute.route, useZh) ??
+                    operatorName(selectedRoute.operator)}{" "}
+                  · {playable.length} {t("stops")}
                 </small>
               </span>
               <button

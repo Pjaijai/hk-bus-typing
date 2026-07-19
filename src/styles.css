@@ -537,19 +537,20 @@ footer a {
   position: relative;
 }
 
-/* Transport-type switch: one chip per operator, scrolls sideways when the
-   row overflows so it never pushes the map off screen. */
+/* Transport-type switch: one chip per operator, wrapping onto new rows so
+   every type stays visible without a sideways scroll. */
 .type-switch {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
   margin-bottom: 10px;
-  scrollbar-width: thin;
 }
 
 .type-button {
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: 6px 11px;
   border-radius: 999px;
   background: var(--surface);
@@ -557,6 +558,10 @@ footer a {
   font-size: 12.5px;
   font-weight: 650;
   white-space: nowrap;
+}
+
+.type-button svg {
+  flex: 0 0 auto;
 }
 
 .type-button.active {
@@ -587,6 +592,19 @@ footer a {
    termini live in the tooltip and in the selection panel. */
 .route-pill {
   padding: 4px;
+}
+
+/* MTR lines are named, not numbered — each option carries the line-code chip
+   in its livery colour plus the full line name, riding the same two-row
+   sideways-scrolling strip as the route pills. */
+.route-pill.named-pill {
+  padding: 5px 12px 5px 5px;
+}
+
+.line-pill-name {
+  font-size: 12.5px;
+  font-weight: 650;
+  white-space: nowrap;
 }
 
 .operator-group {
@@ -701,6 +719,9 @@ footer a {
 }
 
 .island-head .line-names small {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   color: var(--ink-soft);
   font-size: 12px;
 }

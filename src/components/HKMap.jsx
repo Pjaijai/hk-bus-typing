@@ -133,12 +133,13 @@ export function HKMap({
           })
         : null}
       {selectedRoute && bus ? (
-        <BusMarker
+        <VehicleMarker
           x={bus.point[0]}
           y={bus.point[1]}
           angle={(bus.angle * 180) / Math.PI}
           scale={(width / 700) * 3}
           color={selectedRoute.color}
+          kind={vehicleKind(selectedRoute.operator)}
           shake={busShake}
           speeding={busSpeeding}
           boost={busBoost}
@@ -148,9 +149,22 @@ export function HKMap({
   );
 }
 
-// A shaded top-down double-decker drawn pointing right and centred on the
-// origin; the roof takes the route colour like a KMB ad wrap.
-function BusMarker({ x, y, angle, scale, color, shake, speeding, boost }) {
+// Which top-down vehicle the marker draws. Green minibuses and the three
+// ferry operators get their own silhouette; everything else (franchised
+// buses, MTR/light rail, feeder buses) rides the double-decker.
+const FERRY_OPERATORS = new Set(["sunferry", "fortuneferry", "hkkf"]);
+export function vehicleKind(operator) {
+  if (operator === "gmb") return "minibus";
+  if (FERRY_OPERATORS.has(operator)) return "ferry";
+  return "bus";
+}
+
+// A shaded top-down vehicle drawn pointing right and centred on the origin;
+// the bodywork takes the route colour. The wrapper — position, boost ring,
+// shake, and speed streaks — is shared; only the silhouette changes by kind.
+function VehicleMarker({ x, y, angle, scale, color, kind, shake, speeding, boost }) {
+  const Body =
+    kind === "ferry" ? FerryBody : kind === "minibus" ? MinibusBody : BusBody;
   return (
     <g
       className="hk-train"
@@ -209,37 +223,120 @@ function BusMarker({ x, y, angle, scale, color, shake, speeding, boost }) {
             <stop offset="0" stopColor="#4a545e" />
             <stop offset="1" stopColor="#20262c" />
           </linearGradient>
-          <clipPath id="bus-clip">
-            <rect x="-11" y="-4.5" width="22" height="9" rx="2.6" />
-          </clipPath>
         </defs>
-        <ellipse cx="0" cy="4" rx="11" ry="2.6" fill="rgba(10, 14, 20, 0.28)" />
-        <rect
-          x="-11"
-          y="-4.5"
-          width="22"
-          height="9"
-          rx="2.6"
-          fill="url(#bus-body)"
-          stroke="rgba(20, 25, 32, 0.35)"
-          strokeWidth="0.5"
-        />
-        <g clipPath="url(#bus-clip)">
-          {/* Route-coloured roof with a pale centre ridge and hatches. */}
-          <rect x="-10.2" y="-3.6" width="18.6" height="7.2" rx="2" fill={color} opacity="0.92" />
-          <rect x="-9.6" y="-0.55" width="17.4" height="1.1" rx="0.55" fill="rgba(255,255,255,0.5)" />
-          <rect x="-7.5" y="-2.6" width="3.2" height="5.2" rx="0.7" fill="rgba(255,255,255,0.28)" />
-          <rect x="-1.5" y="-2.6" width="3.2" height="5.2" rx="0.7" fill="rgba(255,255,255,0.28)" />
-          <rect x="4.5" y="-2.6" width="3.2" height="5.2" rx="0.7" fill="rgba(255,255,255,0.28)" />
-        </g>
-        {/* Front windscreen band ahead of the roof wrap. */}
-        <path
-          d="M 8.6 -3.6 Q 10.6 -2.8 10.9 0 Q 10.6 2.8 8.6 3.6 Z"
-          fill="url(#bus-glass)"
-        />
-        <circle cx="10.4" cy="-2" r="0.7" fill="#ffe9a8" />
-        <circle cx="10.4" cy="2" r="0.7" fill="#ffe9a8" />
+        <Body color={color} />
       </g>
     </g>
+  );
+}
+
+// Double-decker: full-length roof wrap in the route colour, front windscreen.
+function BusBody({ color }) {
+  return (
+    <>
+      <defs>
+        <clipPath id="bus-clip">
+          <rect x="-11" y="-4.5" width="22" height="9" rx="2.6" />
+        </clipPath>
+      </defs>
+      <ellipse cx="0" cy="4" rx="11" ry="2.6" fill="rgba(10, 14, 20, 0.28)" />
+      <rect
+        x="-11"
+        y="-4.5"
+        width="22"
+        height="9"
+        rx="2.6"
+        fill="url(#bus-body)"
+        stroke="rgba(20, 25, 32, 0.35)"
+        strokeWidth="0.5"
+      />
+      <g clipPath="url(#bus-clip)">
+        {/* Route-coloured roof with a pale centre ridge and hatches. */}
+        <rect x="-10.2" y="-3.6" width="18.6" height="7.2" rx="2" fill={color} opacity="0.92" />
+        <rect x="-9.6" y="-0.55" width="17.4" height="1.1" rx="0.55" fill="rgba(255,255,255,0.5)" />
+        <rect x="-7.5" y="-2.6" width="3.2" height="5.2" rx="0.7" fill="rgba(255,255,255,0.28)" />
+        <rect x="-1.5" y="-2.6" width="3.2" height="5.2" rx="0.7" fill="rgba(255,255,255,0.28)" />
+        <rect x="4.5" y="-2.6" width="3.2" height="5.2" rx="0.7" fill="rgba(255,255,255,0.28)" />
+      </g>
+      {/* Front windscreen band ahead of the roof wrap. */}
+      <path
+        d="M 8.6 -3.6 Q 10.6 -2.8 10.9 0 Q 10.6 2.8 8.6 3.6 Z"
+        fill="url(#bus-glass)"
+      />
+      <circle cx="10.4" cy="-2" r="0.7" fill="#ffe9a8" />
+      <circle cx="10.4" cy="2" r="0.7" fill="#ffe9a8" />
+    </>
+  );
+}
+
+// Green minibus: shorter and narrower than the double-decker, with the
+// route-coloured roof band Hong Kong minibuses actually wear.
+function MinibusBody({ color }) {
+  return (
+    <>
+      <defs>
+        <clipPath id="minibus-clip">
+          <rect x="-8" y="-3.9" width="16" height="7.8" rx="2.4" />
+        </clipPath>
+      </defs>
+      <ellipse cx="0" cy="3.4" rx="8" ry="2.1" fill="rgba(10, 14, 20, 0.28)" />
+      <rect
+        x="-8"
+        y="-3.9"
+        width="16"
+        height="7.8"
+        rx="2.4"
+        fill="url(#bus-body)"
+        stroke="rgba(20, 25, 32, 0.35)"
+        strokeWidth="0.5"
+      />
+      <g clipPath="url(#minibus-clip)">
+        {/* Rear route-coloured roof band; the front third stays white cab. */}
+        <rect x="-7.4" y="-3.1" width="11" height="6.2" rx="1.6" fill={color} opacity="0.92" />
+        <rect x="-6.8" y="-0.5" width="10" height="1" rx="0.5" fill="rgba(255,255,255,0.5)" />
+        <rect x="-5.4" y="-2.2" width="2.6" height="4.4" rx="0.6" fill="rgba(255,255,255,0.3)" />
+        <rect x="-0.6" y="-2.2" width="2.6" height="4.4" rx="0.6" fill="rgba(255,255,255,0.3)" />
+      </g>
+      {/* Rounded windscreen and headlights at the front. */}
+      <path
+        d="M 5.4 -3.1 Q 7.6 -2.4 7.9 0 Q 7.6 2.4 5.4 3.1 Z"
+        fill="url(#bus-glass)"
+      />
+      <circle cx="7.4" cy="-1.7" r="0.6" fill="#ffe9a8" />
+      <circle cx="7.4" cy="1.7" r="0.6" fill="#ffe9a8" />
+    </>
+  );
+}
+
+// Ferry: a hull with a pointed bow at the front and a route-coloured
+// superstructure amidships.
+function FerryBody({ color }) {
+  return (
+    <>
+      <defs>
+        <clipPath id="ferry-clip">
+          <path d="M -11.5 -4.6 L 5 -4.6 Q 10.5 -4.2 13 0 Q 10.5 4.2 5 4.6 L -11.5 4.6 Q -12.8 4.6 -12.8 3.2 L -12.8 -3.2 Q -12.8 -4.6 -11.5 -4.6 Z" />
+        </clipPath>
+      </defs>
+      <ellipse cx="-0.5" cy="4.2" rx="12" ry="2.6" fill="rgba(10, 14, 20, 0.28)" />
+      {/* White hull, pointed bow to the right. */}
+      <path
+        d="M -11.5 -4.6 L 5 -4.6 Q 10.5 -4.2 13 0 Q 10.5 4.2 5 4.6 L -11.5 4.6 Q -12.8 4.6 -12.8 3.2 L -12.8 -3.2 Q -12.8 -4.6 -11.5 -4.6 Z"
+        fill="url(#bus-body)"
+        stroke="rgba(20, 25, 32, 0.35)"
+        strokeWidth="0.5"
+      />
+      <g clipPath="url(#ferry-clip)">
+        {/* Deck trim and route-coloured cabin block amidships. */}
+        <rect x="-11" y="-4.6" width="24" height="1.1" fill={color} opacity="0.9" />
+        <rect x="-11" y="3.5" width="24" height="1.1" fill={color} opacity="0.9" />
+        <rect x="-8" y="-3" width="12.5" height="6" rx="1.4" fill={color} opacity="0.95" />
+        <rect x="-7.2" y="-2.2" width="1.8" height="4.4" rx="0.5" fill="rgba(255,255,255,0.55)" />
+        <rect x="-4.6" y="-2.2" width="1.8" height="4.4" rx="0.5" fill="rgba(255,255,255,0.55)" />
+        <rect x="-2" y="-2.2" width="1.8" height="4.4" rx="0.5" fill="rgba(255,255,255,0.55)" />
+      </g>
+      {/* Bow highlight. */}
+      <path d="M 8 -1.6 Q 11 -0.9 11.6 0 Q 11 0.9 8 1.6 Z" fill="rgba(255,255,255,0.35)" />
+    </>
   );
 }
