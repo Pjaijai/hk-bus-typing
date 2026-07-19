@@ -979,8 +979,14 @@ footer a {
   .island.collapsed .line-strip,
   .island.collapsed .island-controls,
   .island.collapsed .island-title p,
+  .island.collapsed .operator-group,
+  .island.collapsed .search-group,
   .island.collapsed .island-hint {
     display: none;
+  }
+
+  .line-pill .pill-label {
+    max-width: 128px;
   }
 
   .island.collapsed .island-title h1 {
