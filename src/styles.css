@@ -428,8 +428,37 @@ footer a {
   box-shadow: 0 18px 44px rgba(15, 18, 26, 0.22);
 }
 
+/* Grabber to minimize the island (and bring it back) — the map is the
+   star, so this works at every screen size, not just phones. */
 .island-handle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 0 0 6px;
+  color: var(--ink-soft);
+}
+
+.island.collapsed .line-strip,
+.island.collapsed .island-controls,
+.island.collapsed .island-title p,
+.island.collapsed .operator-group,
+.island.collapsed .search-group,
+.island.collapsed .island-hint {
   display: none;
+}
+
+.island.collapsed .island-title h1 {
+  font-size: 15px;
+}
+
+.island.collapsed.game-island .game-stats,
+.island.collapsed.game-island .station-names {
+  display: none;
+}
+
+.island.collapsed.game-island .typing-panel {
+  padding-top: 0;
 }
 
 .island-title h1 {
@@ -1027,38 +1056,6 @@ footer a {
     bottom: auto;
     right: 10px;
     font-size: 10px;
-  }
-
-  /* Bottom-sheet grabber: collapse the island to keep the map in view. */
-  .island-handle {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    padding: 0 0 6px;
-    color: var(--ink-soft);
-  }
-
-  .island.collapsed .line-strip,
-  .island.collapsed .island-controls,
-  .island.collapsed .island-title p,
-  .island.collapsed .operator-group,
-  .island.collapsed .search-group,
-  .island.collapsed .island-hint {
-    display: none;
-  }
-
-  .island.collapsed .island-title h1 {
-    font-size: 15px;
-  }
-
-  .island.collapsed.game-island .game-stats,
-  .island.collapsed.game-island .station-names {
-    display: none;
-  }
-
-  .island.collapsed.game-island .typing-panel {
-    padding-top: 0;
   }
 
   /* Compact in-game layout: stats in one slim row, tighter typing block. */
