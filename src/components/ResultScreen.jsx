@@ -24,7 +24,7 @@ export function ResultScreen({
             <strong>{metrics.accuracy}%</strong>
           </div>
           <div>
-            <small>{t("completedStations")}</small>
+            <small>{t("completedStops")}</small>
             <strong>{completed}</strong>
           </div>
           <div>
