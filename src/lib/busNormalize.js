@@ -41,6 +41,32 @@ function serviceKey(serviceType) {
   return String(serviceType);
 }
 
+function looksReversed(a, b) {
+  const name = (value) => (value ?? "").trim().toLowerCase();
+  return (
+    name(a.orig?.en) === name(b.dest?.en) &&
+    name(a.dest?.en) === name(b.orig?.en)
+  );
+}
+
+// Ranks service-type variants of the same route: two directions beat one,
+// waypoint-capable (gtfsId on every bound) beats not, then the lower
+// service type (the everyday service) wins.
+export function pairQuality(pair) {
+  const bounds = Object.values(pair.entries);
+  let score = bounds.length > 1 ? 2 : 0;
+  if (bounds.every(({ entry }) => entry.gtfsId ?? pair.gtfsId)) score += 1;
+  return score;
+}
+
+export function preferredPair(candidates) {
+  return [...candidates].sort(
+    (a, b) =>
+      pairQuality(b) - pairQuality(a) ||
+      Number(a.serviceType) - Number(b.serviceType),
+  )[0];
+}
+
 function isFranchised(entry) {
   return (entry.co ?? []).some((operator) => OPERATORS.includes(operator));
 }
@@ -53,12 +79,14 @@ function stopIdsFor(entry) {
 
 // Group routeList entries into one record per route number + operator set +
 // service type, holding the outbound and inbound entries side by side.
+// Exact "O"/"I" bounds win their slot; a combined "IO" bound (circular
+// loops, and odd variant entries some routes carry) only fills a slot that
+// no exact entry claimed, playing as a single outbound run.
 export function pairBounds(entries) {
   const groups = new Map();
   for (const { key, entry } of entries) {
     const operator = primaryOperator(entry.co);
     const groupKey = `${entry.route}|${[...entry.co].sort().join(",")}|${serviceKey(entry.serviceType)}`;
-    const bound = entry.bound?.[operator] ?? "O";
     if (!groups.has(groupKey))
       groups.set(groupKey, {
         route: entry.route,
@@ -66,11 +94,28 @@ export function pairBounds(entries) {
         serviceType: serviceKey(entry.serviceType),
         gtfsId: entry.gtfsId ?? null,
         entries: {},
+        combined: [],
       });
     const group = groups.get(groupKey);
-    // A rare duplicate bound within a group keeps the first entry seen.
-    if (!group.entries[bound]) group.entries[bound] = { key, entry };
+    const bound = entry.bound?.[operator] ?? "O";
+    if (bound === "O" || bound === "I") {
+      if (!group.entries[bound]) group.entries[bound] = { key, entry };
+      // NLB marks both directions "O"; the swapped-termini twin is inbound.
+      else if (
+        bound === "O" &&
+        !group.entries.I &&
+        looksReversed(group.entries.O.entry, entry)
+      )
+        group.entries.I = { key, entry };
+    } else {
+      group.combined.push({ key, entry });
+    }
     if (!group.gtfsId && entry.gtfsId) group.gtfsId = entry.gtfsId;
+  }
+  for (const group of groups.values()) {
+    if (!group.entries.O && group.combined.length)
+      group.entries.O = group.combined[0];
+    delete group.combined;
   }
   return [...groups.values()];
 }
@@ -93,8 +138,10 @@ export function buildRouteIndex(routeList, { featuredIds = new Set() } = {}) {
   for (const pair of pairs) {
     const routeCoKey = `${pair.route}|${[...pair.co].sort().join(",")}`;
     const current = byRouteCo.get(routeCoKey);
-    if (!current || Number(pair.serviceType) < Number(current.serviceType))
-      byRouteCo.set(routeCoKey, pair);
+    byRouteCo.set(
+      routeCoKey,
+      current ? preferredPair([current, pair]) : pair,
+    );
   }
   return [...byRouteCo.values()]
     .map((pair) => {
@@ -229,7 +276,7 @@ export function normalizeRoute({ pair, stopList, waypointsByDir = {} }) {
     segments.push(runStations.map((station) => station.id));
     runsMeta.push({
       dir: bound,
-      gtfsId: pair.gtfsId,
+      gtfsId: entry.gtfsId ?? pair.gtfsId,
       orig: {
         en: cleanStopNameEn(entry.orig?.en ?? ""),
         zh: cleanStopNameZh(entry.orig?.zh ?? ""),

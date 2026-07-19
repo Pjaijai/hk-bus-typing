@@ -73,10 +73,72 @@ describe("buildRouteIndex", () => {
 });
 
 describe("pairBounds", () => {
+  it("pairs NLB-style twin outbound entries as O and I", () => {
+    const nlb = [
+      {
+        key: "1+1+MUI WO+TAI O",
+        entry: entry({
+          co: ["nlb"],
+          bound: { nlb: "O" },
+          gtfsId: null,
+          orig: { en: "Mui Wo Ferry Pier", zh: "梅窩" },
+          dest: { en: "Tai O", zh: "大澳" },
+          stops: { nlb: ["S1", "S2", "S3"] },
+        }),
+      },
+      {
+        key: "1+1+TAI O+MUI WO",
+        entry: entry({
+          co: ["nlb"],
+          bound: { nlb: "O" },
+          gtfsId: null,
+          orig: { en: "Tai O", zh: "大澳" },
+          dest: { en: "Mui Wo Ferry Pier", zh: "梅窩" },
+          stops: { nlb: ["S3", "S2", "S1"] },
+        }),
+      },
+    ];
+    const pairs = pairBounds(nlb);
+    expect(pairs).toHaveLength(1);
+    expect(Object.keys(pairs[0].entries).sort()).toEqual(["I", "O"]);
+  });
+
+  it("prefers a waypoint-capable service type over a bare lower one", () => {
+    const variants = {
+      "1+1+MUI WO+TAI O": entry({
+        co: ["nlb"],
+        bound: { nlb: "O" },
+        gtfsId: null,
+        stops: { nlb: ["S1", "S2"] },
+      }),
+      "1+2+MUI WO+TAI O": entry({
+        serviceType: 2,
+        co: ["nlb"],
+        bound: { nlb: "O" },
+        gtfsId: "1723",
+        stops: { nlb: ["S1", "S2"] },
+      }),
+      "1+2+TAI O+MUI WO": entry({
+        serviceType: 2,
+        co: ["nlb"],
+        bound: { nlb: "I" },
+        gtfsId: "1723",
+        orig: { en: "QUEEN'S PIER", zh: "皇后碼頭" },
+        dest: { en: "FIRST STREET", zh: "第一街" },
+        stops: { nlb: ["S2", "S1"] },
+      }),
+    };
+    const index = buildRouteIndex(variants);
+    expect(index).toHaveLength(1);
+    expect(index[0].serviceType).toBe("2");
+    expect(Object.keys(index[0].bounds).sort()).toEqual(["I", "O"]);
+  });
+
   it("keeps a circular route as a single run", () => {
     const circular = {
       "22M+1+LOOP+LOOP": entry({
         route: "22M",
+        bound: { kmb: "IO" },
         stops: { kmb: ["S1", "S2", "S3", "S1"] },
       }),
     };
