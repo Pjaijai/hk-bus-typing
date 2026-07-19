@@ -152,8 +152,9 @@ export function HomeScreen({
                       <button
                         key={route.id}
                         type="button"
-                        className="line-pill"
+                        className="line-pill route-pill"
                         style={{ "--line-color": route.color }}
+                        title={getRunLabel(getLineRuns(route)[0], useZh)}
                         onClick={() => onSelect(route.id)}
                       >
                         <span
@@ -161,9 +162,6 @@ export function HomeScreen({
                           style={{ background: route.color, color: routeTextColor(route.co) }}
                         >
                           {route.route}
-                        </span>
-                        <span className="pill-label">
-                          {getRunLabel(getLineRuns(route)[0], useZh)}
                         </span>
                       </button>
                     ))}

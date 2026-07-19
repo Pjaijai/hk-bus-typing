@@ -142,6 +142,14 @@ export default function App() {
     document.body.classList.toggle("dark", dark);
   }, [dark]);
 
+  // Deep link: #r/<route-id> preselects a featured route on load.
+  useEffect(() => {
+    if (!data) return;
+    const match = window.location.hash.match(/^#r\/(.+)$/);
+    const route = match && data.routes.find((r) => r.id === match[1]);
+    if (route) setSelectedRouteId(route.id);
+  }, [data]);
+
   useEffect(() => {
     document.documentElement.lang = locale === UI_LOCALES.ZH ? "zh-Hant" : "en";
   }, [locale]);

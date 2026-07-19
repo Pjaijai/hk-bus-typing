@@ -260,7 +260,7 @@ footer a {
    layers instead of a solid blob; hovering (via the fat hit path) lifts
    one route out of it. */
 .hk-map.overview .hk-route polyline {
-  opacity: 0.55;
+  opacity: 0.7;
 }
 
 .hk-map.overview .hk-route:hover polyline {
@@ -404,11 +404,10 @@ footer a {
   border-color: var(--line-color);
 }
 
-.line-pill .pill-label {
-  max-width: 200px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+/* Home pills are chip-only: 23 routes must leave the map visible. The
+   termini live in the tooltip and in the selection panel. */
+.route-pill {
+  padding: 4px;
 }
 
 .operator-group {
@@ -983,10 +982,6 @@ footer a {
   .island.collapsed .search-group,
   .island.collapsed .island-hint {
     display: none;
-  }
-
-  .line-pill .pill-label {
-    max-width: 128px;
   }
 
   .island.collapsed .island-title h1 {

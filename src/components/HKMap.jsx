@@ -96,7 +96,7 @@ export function HKMap({
                 key={index}
                 points={pointsToString(points)}
                 stroke={route.color}
-                strokeWidth={(isSelected ? 4 : hasSelection ? 1.6 : 2) * unitScale}
+                strokeWidth={(isSelected ? 4 : hasSelection ? 1.6 : 2.4) * unitScale}
               />
             ))}
             {onSelectLine
